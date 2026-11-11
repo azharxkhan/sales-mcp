@@ -1,8 +1,12 @@
 # Sales MCP
 
-An open-source **Model Context Protocol (MCP) server for B2B sales orders**, written in C#/.NET. Through it, AI assistants can check stock, quote, place orders and analyse sales, with ERP-grade business rules and guardrails.
+An open-source **Model Context Protocol (MCP) server for building B2B sales agents**, written in C#/.NET.
 
-The repo also works as a **step-by-step course** on building production-quality MCP servers and the DevOps around them.
+Configure an agent (**what** it sells: products, services or subscriptions; **how** it sells: research-backed playbooks such as consultative SPIN or decisive JOLT; its persona; and its guardrails), and any MCP-capable AI becomes that agent. Under the hood is an ERP-grade order engine: quotes, pricing, credit holds, back-orders.
+
+**How to build sales agents people don't hate:** they always disclose that they're AI, answer from one source of truth, hand off to humans easily, and have their guardrails enforced in code, not just prompts.
+
+The repo also works as a **step-by-step course** on building production-quality MCP servers, AI agents (including evaluating them in CI) and the DevOps around them.
 
 > **Status: planning and research.** No code yet. Start with the plan and the research below.
 
@@ -10,7 +14,7 @@ The repo also works as a **step-by-step course** on building production-quality 
 
 | Document | What's in it |
 |---|---|
-| [Project plan](docs/PLAN.md) | Vision, decisions, domain model, MCP tools/resources/prompts, architecture, DevOps, milestones |
+| [Project plan](docs/PLAN.md) | Vision, decisions (ADRs), agent profiles and playbooks, domain model, MCP surface, architecture, evals, DevOps, milestones |
 | [State of sales 2026](docs/research/sales-landscape-2026.md) | Trends, then vs now, how selling evolved, reading list |
 | [AI in sales 2023–2026](docs/research/ai-in-sales-2023-2026.md) | What AI was used for, what worked, quarter-by-quarter timeline, buyer complaints |
 | [Fixing AI selling](docs/research/fixing-ai-selling.md) | How each complaint could have been fixed, with cases (Klarna, Air Canada, Artisan) |
@@ -24,6 +28,7 @@ The repo also works as a **step-by-step course** on building production-quality 
 
 - 67% of B2B buyers prefer rep-free buying, and 45% used AI in a recent purchase (Gartner, 2026).
 - AI agents deliver the most on structured work such as quotes and order fulfilment (Salesforce, 2026).
+- 40–60% of lost deals end in "no decision" (*The JOLT Effect*), so *how* an agent sells matters as much as what it knows.
 - Buyers distrust AI that's generic, pushy, hidden or impossible to escalate. This project is designed around those lessons.
 
 ## How this repo is built
