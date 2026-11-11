@@ -1,0 +1,20 @@
+name: Research
+description: A question to investigate and write up in docs/research
+title: "research: "
+labels: ["type: research"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What do we want to know, and how will it inform the project?
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Expected output
+      value: |
+        - [ ] Markdown write-up in docs/research/ with sources linked
+        - [ ] Design implications for the Sales MCP noted
+        - [ ] No raw third-party files committed (link to originals)
