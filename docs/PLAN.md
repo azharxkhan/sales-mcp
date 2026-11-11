@@ -1,8 +1,10 @@
 # Sales MCP: Project Plan
 
-> **One-liner:** An open-source **Model Context Protocol server for B2B sales orders**, written in C#/.NET. AI assistants can check stock, quote, place orders and analyse sales through it, with ERP-grade business rules and guardrails. The repo also works as a **step-by-step course** on building production-quality MCP servers and the DevOps around them.
+> **One-liner:** An open-source **MCP server for building B2B sales agents**, written in C#/.NET. You configure an agent (what it sells, *how* it sells, its persona and its guardrails), and any MCP-capable AI becomes that agent. It sells **products, services and subscriptions** using research-backed playbooks, on top of an ERP-grade order engine. The repo also works as a **step-by-step course** on building production-quality MCP servers, AI agents and the DevOps around them.
 >
-> Background research: [sales-landscape-2026.md](research/sales-landscape-2026.md) · [ai-in-sales-2023-2026.md](research/ai-in-sales-2023-2026.md)
+> **Headline:** *How to build sales agents people don't hate:* transparent, consistent, easy to escalate, and guardrailed in code.
+>
+> Research: [sales landscape](research/sales-landscape-2026.md) · [AI in sales 2023–26](research/ai-in-sales-2023-2026.md) · [fixing AI selling](research/fixing-ai-selling.md) · [book summaries](research/sales-book-summaries.md) · [benchmarks](research/sales-data-benchmarks.md) · [ERP order-to-cash](research/erp-order-to-cash.md) · [SA market](research/south-africa-market.md) · [classic guides](research/classic-sales-guides.md)
 
 ---
 
@@ -10,13 +12,14 @@
 
 | Research finding | How the project answers it |
 |---|---|
-| 67% of B2B buyers prefer rep-free buying, and 45% used AI in a purchase (Gartner 2026) | The MCP **is** a rep-free, AI-native sales channel |
-| AI agents deliver most where tasks are structured: **quotes, order fulfilment, usage tracking** (Salesforce 2026) | The core tools are exactly those |
-| Most AI deployments fail on **data quality** and missing governance | One source of truth, validated inputs, business rules, audit log |
-| Buyers distrust hidden selling and bots that can't escalate | No sales bias in tool output, transparent AI actions, a `request_human_review` tool |
-| Agentic commerce (ACP / UCP / AP2) is arriving | The design shows the "seller-side system an agent talks to" pattern |
+| 67% of B2B buyers prefer rep-free buying, and 45% used AI in a purchase (Gartner 2026) | Agents become a rep-free, AI-native sales channel |
+| Mass AI outreach failed (reply rates ~1–4%, AI SDR churn). AI works on **structured, high-intent tasks**: quotes, orders, usage (Salesforce 2026) | Agents serve inbound and existing customers, grounded in real catalog and order data. No outbound blasting |
+| 40–60% of lost deals end in **"no decision"** (*JOLT Effect*). Pressure backfires in big deals (*SPIN*) | Selling styles are **playbooks**, so an agent can be decisive and risk-reducing instead of pushy |
+| Buyers distrust AI that is generic, hidden, inconsistent or impossible to escalate (Air Canada, Klarna, Artisan) | AI disclosure, one source of truth, human handoff and an audit log are core features |
+| Usage pricing is the #1 growth model. Products, services and subscriptions sell differently | One `Offering` model with three types, and type-specific tools |
+| POPIA s69/s71, EU AI Act Art. 50 | Consent-aware follow-ups, human review of credit decisions, AI disclosure |
 
-**Portfolio goals:** show (1) MCP and API design, (2) clean .NET architecture and testing, (3) DevOps: CI/CD, containers, IaC, security scanning, releases, (4) the ability to model a real business domain (ERP sales orders).
+**Portfolio goals:** show (1) MCP and agent design, (2) clean .NET architecture and testing, (3) DevOps: CI/CD, containers, IaC, security scanning, releases, (4) real business-domain modelling (ERP order-to-cash), (5) **AI evaluation**, meaning agent behaviour tested like code.
 
 ---
 
@@ -24,235 +27,277 @@
 
 | # | Decision | Choice | Why |
 |---|---|---|---|
-| ADR-0001 | Language / runtime | **C# on .NET 10 (LTS)** | Your strongest stack. Far fewer C# MCP examples exist than TS/Python ones, so the repo stands out |
-| ADR-0002 | MCP SDK | Official **`ModelContextProtocol`** NuGet package (+ `ModelContextProtocol.AspNetCore` for HTTP). Pin the latest stable at M0 | Official SDK, attribute-based tools, built on generic host |
-| ADR-0003 | Domain | **ERP sales orders**: customers, stock, price lists, quotes, orders | Differentiated, and rich in business rules |
-| ADR-0004 | Architecture | **Clean / layered**: Domain → Application → Infrastructure → MCP host | Business rules are testable without MCP. Easy to teach |
-| ADR-0005 | Persistence | **EF Core**. SQLite for local/stdio, PostgreSQL in Docker/cloud | Zero-setup demo, plus a realistic production database |
-| ADR-0006 | Transports | **stdio first** (Claude Desktop/Code), **Streamable HTTP** later | stdio is the simplest to teach. HTTP is needed for hosting |
-| ADR-0007 | Locale defaults | Currency **ZAR**, **VAT 15%**, both configurable | Realistic, and gives the project a distinctive local flavour |
-| ADR-0008 | Commits / releases | **Conventional Commits** + automated semver releases | A changelog for free, and a readable history |
-| ADR-0009 | Cloud | **AWS ECS Fargate + RDS (or App Runner)** via **Terraform**, GitHub **OIDC** | Builds on your AWS/Terraform learning. No long-lived keys |
+| ADR-0001 | Language / runtime | **C# on .NET 10 (LTS)** | Your strongest stack. C# MCP examples are rare, so the repo stands out |
+| ADR-0002 | MCP SDK | Official **`ModelContextProtocol`** NuGet package (+ `ModelContextProtocol.AspNetCore`). Pin the latest stable at M0 | Official SDK, attribute-based tools, generic host |
+| ADR-0003 | Domain | **B2B selling** of products, services and subscriptions, on an **ERP-grade order engine** | Broad enough to be a platform. ERP rigour makes it more than a toy |
+| ADR-0004 | Architecture | **Clean / layered**: Domain → Application → Infrastructure → MCP host (→ Agent runtime later) | Rules testable without MCP or AI |
+| ADR-0005 | Persistence | **EF Core**. SQLite locally, PostgreSQL in Docker/cloud | Zero-setup demo, realistic production database |
+| ADR-0006 | Transports | **stdio first**, then **Streamable HTTP** (needed for the agent runtime and hosting) | Simplest to teach, then production |
+| ADR-0007 | Locale defaults | **ZAR**, per-item **VAT codes** (15% standard, zero-rated, exempt), configurable | Realistic local flavour ([SA research](research/south-africa-market.md)) |
+| ADR-0008 | Commits / releases | **Conventional Commits** + automated semver releases | Readable history, a changelog for free |
+| ADR-0009 | Cloud | **AWS** (ECS Fargate or App Runner + RDS) via **Terraform**, GitHub **OIDC** | Builds on your AWS learning. No long-lived keys |
+| **ADR-0010** | **Agent architecture** | **A then B.** (A) The MCP server *shapes the host's agent* with an agent profile: playbook prompt, scoped tools, guardrails. (B) Later, our **own agent runtime** (Claude Agent SDK) connects to the server over HTTP | A teaches pure MCP and works with any client. B gives full control, a chat UI and the eval harness |
+| **ADR-0011** | **Guardrails live in tools, not prompts** | Every rule that matters (discount caps, credit holds, max options, allowed risk-reducers, AI disclosure) is **enforced server-side**. Prompts only guide style | A model can ignore a prompt. It can't bypass a tool that rejects the call |
+| **ADR-0012** | **Agent bound at connection, not chosen by the model** | stdio: `--agent <id>` at startup. HTTP: API key → agent profile. The model can't switch to a laxer agent mid-conversation | Prevents guardrail escape through prompt injection |
+| **ADR-0013** | **Playbooks and agents as data** | Versioned YAML files (`agents/*.yaml`, `playbooks/*.yaml`), validated against a JSON Schema at startup and in CI | Reviewable in PRs, testable, no code change to add a selling style |
+| **ADR-0014** | **B2B-first** | Business buyers, accounts, credit terms, quotes. B2C playbooks possible later | Strongest research and domain knowledge. Avoids consumer-law scope early |
 
 ---
 
-## 3. Domain model (v1)
+## 3. Core concepts
 
+### 3.1 Agent profile = five parts
+
+```yaml
+# agents/acme-distributor-jolt.yaml
+id: acme-distributor-jolt
+business: acme-distributors            # which seeded business/catalog
+offerings: [product]                   # product | service | plan
+playbook: jolt-decisive                # how it sells
+persona:
+  name: "Thandi (AI sales assistant)"
+  tone: friendly-professional
+  disclose_ai: true                    # always on; schema forbids false
+  locale: en-ZA
+channel: self-service                  # self-service | rep-assist | customer-follow-up
+guardrails:
+  max_discount_percent: 10             # above this → approval flow
+  credit_check: hold-and-release       # warn-only | hold-and-release | block
+  handoff_when: [deal_value_over: 50000, buyer_asks_for_human, legal_terms_question, credit_hold]
+  forbidden: [false_scarcity, false_urgency, invented_social_proof]
+  marketing_requires_opt_in: true      # POPIA s69
 ```
-Customer ──< Quote ──< QuoteLine >── StockItem
-   │           │ (convert)              │
-   │           ▼                        ├── Warehouse stock (OnHand, Allocated, OnOrder)
-   └──────< SalesOrder ──< OrderLine >──┘
-               │
-               ├── Status: Draft → Released → PartiallyShipped → Shipped → Invoiced | Cancelled
-               └── BackOrderLine (when stock is short)
 
-PriceList ──< PriceListItem (StockItem, UnitPrice, MinQty)
-Customer → PriceList, CreditLimit, Balance, OnHold, SalesRep
-Deal (M7): MEDDPICC fields, Stage, Value, linked Quote
-AuditEntry: who/what/when for every mutating tool call
+### 3.2 Playbook = how it sells
+
+```yaml
+# playbooks/jolt-decisive.yaml
+id: jolt-decisive
+based_on: "The JOLT Effect (Dixon & McKenna, 2022)"
+stages: [qualify, recommend, de-risk, commit]
+rules:                                  # enforced in tools (ADR-0011)
+  max_options_presented: 2
+  must_recommend: true
+  allowed_risk_reducers: [trial, phased_delivery, cancel_anytime, return_window]
+prompt: prompts/jolt-decisive.md        # style guidance for the model
 ```
 
-**Business rules (the "real logic" that makes it more than CRUD):**
-1. **Credit check:** an order is blocked if `Balance + OrderTotal > CreditLimit` or the customer is on hold.
-2. **Stock allocation:** allocate from available stock (`OnHand − Allocated`). Any shortfall becomes back-order lines.
-3. **Pricing:** customer price list → quantity breaks → default list price. VAT is applied per line.
-4. **Discount guardrail:** ≤ 10% applies automatically. 10–20% needs an approval token from `request_discount_approval`. > 20% is rejected.
-5. **Quote expiry:** quotes expire after 30 days (configurable). Expired quotes can't be converted.
-6. **Idempotency:** mutating tools accept a client `requestId`, so a retrying agent can't create duplicate orders.
-7. **Audit:** every write produces an `AuditEntry`. Exposed read-only as a resource.
+**Planned playbooks** (from [book summaries](research/sales-book-summaries.md)):
+
+| Playbook | Based on | Best for | Milestone |
+|---|---|---|---|
+| `consultative-spin` | SPIN + Gap Selling + Sandler up-front contract | New customers, complex needs | **M3 (v1)** |
+| `jolt-decisive` | JOLT Effect | Indecisive buyers, stalled quotes | **M3 (v1)** |
+| `transactional-fast` | Rackham & DeVincentis' transactional segment | Repeat orders, known items | M6 |
+| `account-expansion` | Expansion win rates (~45% vs ~20% new) | Upsell and cross-sell to existing customers (no bias in facts) | M6 |
+| `challenger-insight` | Challenger Sale | Data-backed insight from purchase history | M8 |
+
+### 3.3 Offerings: one model, three ways to sell
+
+| | **Product** | **Service** | **Plan** (subscription/usage) |
+|---|---|---|---|
+| Key question | In stock? When can it ship? | Who's available? What's the scope? | Which plan fits their usage? |
+| Type-specific tools | `check_stock`, back-orders | `check_availability`, `estimate_scope`, `book_service` | `compare_plans`, `estimate_usage_cost`, `start_subscription` |
+| Risk-reducers | Return window, partial delivery | Paid discovery, fixed-price phase 1 | Trial, cancel anytime |
+| Demo business (seed) | **Acme Distributors** (SA industrial supplies) | **Nimbus IT Services** | **LedgerLite** (SaaS) |
+| Milestone | M1–M4 (v1) | M6 | M6 |
 
 ---
 
-## 4. MCP surface
+## 4. Domain model
 
-### Tools (actions)
-| Tool | Milestone | Mutates? |
+```
+Business ──< Offering (Product | Service | Plan) ──< PriceListItem / PlanTier / Rate
+   │
+   ├──< AgentProfile → Playbook        (loaded from YAML, validated)
+   │
+Customer (Account) ──< Contact (MarketingConsent)
+   │  CreditLimit, Balance, OnHold, AllowBackOrders, AllowPartialShipment, VatNumber
+   │
+   ├──< Quote ──< QuoteLine ──> Offering         (ValidUntil, RiskReducers, PriceBreakdown)
+   │      │ convert
+   │      ▼
+   ├──< SalesOrder ──< OrderLine                  (Draft → Released → PartiallyShipped → Shipped → Invoiced | Cancelled)
+   │      ├── OrderHold (reason code: credit | discount-approval | review)   ← order-level
+   │      └── BackOrderLine                                                  ← line-level (stock)
+   ├──< Booking (Service)                         (M6)
+   └──< Subscription (Plan, usage)                (M6)
+
+Conversation/Session (agentId, customerId) ──< AuditEntry (every tool call: who/agent/what/when/result)
+HumanReviewRequest (entity, reason, summary, status)
+Deal (MEDDPICC fields)                            (M10)
+```
+
+**Business rules** (details in [ERP research §4](research/erp-order-to-cash.md#4-design-decisions-for-the-sales-mcp-domain)):
+1. **Credit:** hold-and-release by default. Exposure = balance + open orders + this order (quotes excluded). A hold always goes to human review (POPIA s71).
+2. **Allocation:** from available stock per warehouse. Shortfall → back-order lines if the customer allows. No allocation while on hold (configurable).
+3. **Pricing:** contract price → customer price list → quantity break → list price, then discount, then VAT per line. Returned as a `PriceBreakdown`.
+4. **Discounts:** within the agent's cap = auto. Above it = `request_discount_approval`. Hard ceiling = rejected.
+5. **Playbook rules:** e.g. `recommend` returns at most N options and must mark one as recommended. `quote` only attaches allowed risk-reducers.
+6. **Honesty:** stock, price and lead-time facts come only from data. Agents can't present scarcity or urgency that the data doesn't support.
+7. **Disclosure:** every customer-facing output from mutating tools carries "performed by AI agent {name}".
+8. **Idempotency:** mutating tools take a `requestId`.
+9. **Audit:** every tool call is logged with the agent and customer.
+
+---
+
+## 5. MCP surface
+
+### Tools
+| Tool | Purpose | Milestone |
 |---|---|---|
-| `search_customers(query)` | M2 | no |
-| `get_customer_credit(customerId)` | M2 | no |
-| `search_stock(query)` / `check_stock(sku, warehouse?)` | M2 | no |
-| `get_price(customerId, sku, qty)` | M2 | no |
-| `create_quote(customerId, lines[], requestId)` | M2 | yes |
-| `convert_quote_to_order(quoteId, requestId)` | M4 | yes |
-| `get_order_status(orderId)` | M2 | no |
-| `list_backorders(customerId?)` | M4 | no |
-| `apply_discount(quoteId, percent, approvalToken?)` | M4 | yes |
-| `request_discount_approval(quoteId, percent, reason)` | M4 | yes |
-| `cancel_order(orderId, reason)` | M4 | yes |
-| `request_human_review(entityId, reason)` | M4 | yes |
-| `score_deal_qualification(dealId)` (MEDDPICC) | M7 | no |
+| `get_agent_profile` | Returns the bound agent's persona, playbook stages and guardrails (so the host knows its role) | M3 |
+| `search_catalog(query, type?)` | Find offerings | M2 |
+| `get_customer(customerId)` / `get_customer_credit` | Account context | M2 |
+| `check_stock(sku)` | Availability + `AvailableDate` | M2 |
+| `get_price(customerId, offeringId, qty)` | Price with `PriceBreakdown` | M2 |
+| `qualify(customerId, answers)` | Records needs (current state → future state) against playbook stages | M3 |
+| `recommend(customerId, needs)` | Ranked offerings, capped by playbook rules, one marked recommended | M3 |
+| `create_quote(customerId, lines, riskReducers?, requestId)` | Quote with validity and allowed risk-reducers | M2/M3 |
+| `convert_quote_to_order(quoteId, requestId)` | Credit check, allocation, back-orders | M4 |
+| `get_order_status(orderId)` / `list_backorders` | Fulfilment | M2/M4 |
+| `apply_discount` / `request_discount_approval` | Discount guardrail | M4 |
+| `request_human_review(entityId, reason)` | Handoff with conversation summary | M4 |
+| `check_availability` / `estimate_scope` / `book_service` | Services | M6 |
+| `compare_plans` / `estimate_usage_cost` / `start_subscription` | Plans | M6 |
+| `score_deal_qualification(dealId)` | MEDDPICC | M10 |
 
-### Resources (read-only context)
-`customer://{id}` · `order://{id}` · `quote://{id}` · `pricelist://{id}` · `stock://{sku}` · `policy://discounts` · `audit://recent` · `reports://sales-summary/{period}` (M7)
+### Resources
+`agent://current` · `playbook://{id}` · `catalog://{business}` · `offering://{id}` · `customer://{id}` · `quote://{id}` · `order://{id}` · `policy://discounts` · `policy://returns` · `audit://recent` · `reports://sales-summary/{period}` (M10)
 
-### Prompts (reusable templates)
-`/quote-for-customer {customer}` · `/order-follow-up {orderId}` · `/backorder-report` · `/weekly-sales-summary` (M7) · `/needs-assessment {customer}` (fit questions, SPIN-style)
-
-**Tool design rules:** clear `[Description]` text, typed inputs validated with domain errors, errors returned as tool errors (not exceptions), small structured outputs, and no upsell or sponsored bias in results.
+### Prompts
+`/sell` (starts a conversation in the bound agent's playbook) · `/needs-assessment {customer}` · `/quote-follow-up {quoteId}` · `/order-follow-up {orderId}` · `/backorder-report` · `/weekly-sales-summary` (M10)
 
 ---
 
-## 5. Architecture and repo structure
+## 6. Architecture and repo structure
+
+```
+             ┌──────────────────────────┐        ┌──────────────────────────────┐
+  Option A   │ MCP host (Claude Desktop │ stdio  │ SalesMcp.Server.Stdio        │
+  (M2–M5)    │ / Claude Code / any)     │───────▶│  --agent acme-distributor-jolt│
+             └──────────────────────────┘        └──────────────┬───────────────┘
+                                                                │
+             ┌──────────────────────────┐  HTTP + API key       ▼
+  Option B   │ SalesMcp.AgentRuntime    │──────▶ SalesMcp.Server.Http ──▶ Application ──▶ Domain
+  (M7–M8)    │ (Claude Agent SDK) + chat│        (key → agent profile)        │
+             │ UI + Eval harness        │                                     ▼
+             └──────────────────────────┘                              Infrastructure (EF Core, YAML loader)
+```
 
 ```
 sales-mcp/
 ├── src/
-│   ├── SalesMcp.Domain/          # Entities, value objects, business rules (no dependencies)
-│   ├── SalesMcp.Application/     # Use cases/services, interfaces, DTOs, validation
-│   ├── SalesMcp.Infrastructure/  # EF Core DbContext, migrations, repositories, seeding
-│   ├── SalesMcp.Server.Stdio/    # MCP host: stdio transport (console app)
-│   └── SalesMcp.Server.Http/     # MCP host: Streamable HTTP (ASP.NET Core) + auth + health
-├── tests/
-│   ├── SalesMcp.Domain.Tests/        # Pure unit tests for rules
-│   ├── SalesMcp.Application.Tests/
-│   └── SalesMcp.IntegrationTests/    # Real MCP client ↔ server, Testcontainers Postgres
-├── docs/
-│   ├── PLAN.md  · adr/  · research/
-│   └── course/                   # Teaching chapters (see §8)
-├── deploy/
-│   ├── docker/                   # Dockerfile(s), compose.yaml
-│   └── terraform/                # AWS infra (M6)
-├── .github/
-│   ├── workflows/                # ci.yml, codeql.yml, release.yml, deploy.yml
-│   ├── ISSUE_TEMPLATE/ · pull_request_template.md · dependabot.yml · CODEOWNERS
-├── Directory.Build.props · Directory.Packages.props   # Central package management, analyzers, nullable
-├── .editorconfig · global.json · SalesMcp.sln
-├── README.md · CONTRIBUTING.md · SECURITY.md · LICENSE (MIT) · CHANGELOG.md
+│   ├── SalesMcp.Domain/            # Offerings, customers, quotes, orders, rules (no dependencies)
+│   ├── SalesMcp.Application/       # Use cases, guardrail + playbook enforcement, DTOs
+│   ├── SalesMcp.Infrastructure/    # EF Core, migrations, seeding, YAML agent/playbook loader
+│   ├── SalesMcp.Server.Stdio/      # MCP host (stdio), agent bound by --agent
+│   ├── SalesMcp.Server.Http/       # MCP host (Streamable HTTP), API key → agent (M7)
+│   └── SalesMcp.AgentRuntime/      # Our own agent loop + chat UI (M7)
+├── agents/  · playbooks/  · prompts/   # Agent profiles, playbooks, prompt guidance (YAML/Markdown)
+├── schemas/                        # JSON Schemas for agent + playbook files
+├── evals/                          # Buyer personas, scenarios, scoring (M8)
+├── tests/                          # Domain, Application, Integration (MCP client ↔ server)
+├── docs/  (PLAN, adr/, research/, course/)
+├── deploy/ (docker/, terraform/)
+└── .github/ (workflows, templates)
 ```
 
 ---
 
-## 6. Quality and testing
+## 7. Quality, testing and evaluation
 
-- **Unit:** every business rule (credit, allocation, pricing, discount tiers, expiry, idempotency). Target ≥ 90% coverage on Domain.
-- **Integration:** start the server in-process, connect with the SDK's MCP client, then call `tools/list` and each tool. Assert on schemas and results. Postgres via **Testcontainers**.
-- **Contract snapshot:** snapshot the tool/resource/prompt list so accidental breaking changes fail CI.
-- **Static checks:** `dotnet format --verify-no-changes`, warnings-as-errors, nullable enabled, .NET analyzers.
-- **Manual:** the MCP Inspector, plus a documented Claude Desktop / Claude Code config.
+- **Unit:** all business and playbook rules (credit, allocation, pricing, discount tiers, max options, risk-reducers, honesty checks).
+- **Integration:** in-process server + SDK MCP client, starting the server bound to each sample agent. Asserts guardrails hold even when the client asks for violations.
+- **Schema validation:** every file in `agents/` and `playbooks/` is validated in CI.
+- **Contract snapshot:** tool/resource/prompt lists per agent.
+- **Evaluation harness (M8):** simulated **buyer personas** (price-sensitive, indecisive, technical evaluator, "just get me a human", adversarial prompt-injector) run scripted scenarios against agent profiles via the agent runtime. Scored on **outcome** (quote/order created), **guardrail breaks** (must be 0), **unnecessary discount**, **correct handoff**, **disclosure present**, **options presented ≤ playbook max**. Runs manually and on a schedule with a capped API budget. Results are published as a CI artifact.
 
 ---
 
-## 7. DevOps plan
+## 8. DevOps plan
 
 | Area | What | Milestone |
 |---|---|---|
-| Branching | Trunk-based: `main` protected, short-lived `feat/*` `fix/*` branches, PRs required, squash merge | M0 |
-| Commits | Conventional Commits (`feat:`, `fix:`, `docs:`, `ci:`…). Claude co-authored commits are allowed and labelled | M0 |
-| CI (`ci.yml`) | restore → format check → build → unit tests → integration tests → coverage report on PR | M0–M1 |
-| Security | CodeQL, Dependabot (NuGet + Actions + Docker), `dotnet list package --vulnerable`, secret scanning, Trivy image scan | M0 / M5 |
-| Containers | Multi-stage Dockerfile (SDK → `aspnet` chiseled/non-root runtime), `compose.yaml` with Postgres, health checks | M5 |
-| Releases (`release.yml`) | release-please (or semantic-release) → tag → GitHub Release + changelog → image to **GHCR** with SBOM + provenance | M5 |
-| IaC | Terraform: VPC, ECS Fargate service, RDS Postgres, ALB/HTTPS, Secrets Manager, CloudWatch. Remote state in S3. `plan` posted on PRs | M6 |
-| CD (`deploy.yml`) | GitHub OIDC → AWS role. Deploy on release to `staging`, manual approval to `prod` (GitHub Environments) | M6 |
-| Observability | Structured logging (Serilog/ILogger JSON), OpenTelemetry traces per tool call, `/health` endpoints | M5–M6 |
-| Repo hygiene | Issue/PR templates, labels, milestones, CODEOWNERS, badges in README | M0 |
-
-**Security for the HTTP transport (M6):** API-key or OAuth bearer auth, per-client rate limiting, input size limits, least-privilege DB user, secrets never in config files. Tool-level authorisation: read-only clients can't call mutating tools.
+| Branching | Trunk-based, protected `main`, PRs only, squash merge (**done**) | M0 |
+| Commits | Conventional Commits, PR-title lint, `Co-Authored-By` for AI-assisted work | M0 |
+| CI | format → build → unit → integration → schema validation → coverage | M0–M3 |
+| AI review | Claude PR review + `@claude` (**added**, needs the token secret) | M0 |
+| Security | CodeQL, Dependabot, vulnerable-package check, secret scanning, Trivy | M0 / M5 |
+| Containers | Multi-stage, non-root image. Compose with Postgres | M5 |
+| Releases | release-please → GitHub Release + changelog → GHCR image + SBOM | M5 |
+| Evals in CI | `evals.yml` (manual + nightly, budget-capped, results artifact) | M8 |
+| IaC + CD | Terraform (Fargate/App Runner, RDS, Secrets Manager), OIDC deploys, staging → prod | M9 |
+| Observability | Structured logs, OpenTelemetry traces per tool call **tagged with agent id**, health checks | M5–M9 |
 
 ---
 
-## 8. Course chapters (`docs/course/`)
+## 9. Milestones
 
-Each chapter matches a milestone and a git tag (`ch01`, `ch02`…), so learners can check out the state at any point.
+> M0 issues already exist (#2–#9). Issues for M1+ get opened when each milestone starts.
 
-1. **What is MCP?** Tools vs resources vs prompts, transports, the request lifecycle
-2. **Hello MCP in C#:** a minimal stdio server with one tool, connected to Claude
-3. **Modelling the domain:** entities, rules and tests first
-4. **Persistence:** EF Core, SQLite, migrations, seed data
-5. **Real tools:** validation, error handling, good descriptions for LLMs
-6. **Resources and prompts**
-7. **Guardrails:** approvals, idempotency, audit, human escalation
-8. **Testing an MCP server end-to-end**
-9. **CI/CD with GitHub Actions**
-10. **Containerising and releasing**
-11. **Going remote:** HTTP transport, auth, deploying to AWS with Terraform
-12. **Analytics and MEDDPICC:** sales insights over MCP
+| Milestone | Release | Scope |
+|---|---|---|
+| **M0: Foundation** | — | Solution scaffold, quality gates, CI, CodeQL, licence/security docs, ADRs 0001–0014, README diagram |
+| **M1: Domain & data** | — | `Offering` model (product implemented, service/plan stubs), customers, price lists, VAT codes, quotes/orders skeleton, **Acme Distributors** seed data (realistic, from [benchmarks](research/sales-data-benchmarks.md)) |
+| **M2: First MCP tools** | v0.1.0 | Stdio host, `search_catalog`, `get_customer`, `check_stock`, `get_price`, `create_quote`, `get_order_status`. Claude setup docs + demo GIF. Integration test harness |
+| **M3: Agents & playbooks** | v0.2.0 | YAML agent/playbook files + JSON Schema, loader, `--agent` binding, `get_agent_profile`, `agent://`/`playbook://` resources, `/sell` + `/needs-assessment` prompts, `qualify`, `recommend`, **`consultative-spin` and `jolt-decisive`**, playbook rule enforcement |
+| **M4: Orders & guardrails** | v0.3.0 | Quote → order, credit hold-and-release, back-orders, discount tiers + approval, `request_human_review`, honesty checks, AI disclosure, audit log |
+| **M5: Ship it** | **v1.0.0** | Docker + compose, Postgres + Testcontainers, release automation, GHCR, SBOM, Trivy, OpenTelemetry |
+| **M6: Services & subscriptions** | v1.1.0 | Service and Plan offerings + tools, **Nimbus IT** and **LedgerLite** seeds, `transactional-fast` + `account-expansion` playbooks |
+| **M7: Agent runtime (Option B)** | v1.2.0 | Streamable HTTP host + API-key → agent binding, Claude Agent SDK runtime, minimal web chat UI |
+| **M8: Evaluation harness** | v1.3.0 | Buyer personas, scenarios, scoring, `evals.yml`, results report, `challenger-insight` playbook |
+| **M9: Cloud deploy** | v1.4.0 | Terraform on AWS, OIDC CD, staging → prod, runbook, cost notes |
+| **M10: Analytics & qualification** | v1.5.0 | MEDDPICC `Deal`, `score_deal_qualification`, sales-summary resources, `/weekly-sales-summary` |
+| *Stretch* | — | B2C playbooks, agent builder tool (`create_agent`), MCP registry publish, `dotnet tool` install |
 
----
-
-## 9. Milestones and issues
-
-> Each milestone is a GitHub Milestone. Each bullet is roughly one issue → one PR.
-
-### M0: Foundation (repo + CI skeleton)
-- `git init`, .NET 10 solution, project layout, `global.json`, `Directory.Build.props`, central package management
-- `.editorconfig`, analyzers, nullable, warnings-as-errors
-- README (pitch, architecture diagram, roadmap), LICENSE, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT
-- `ci.yml` (build + test + format), CodeQL, Dependabot
-- Issue/PR templates, labels, branch protection guide
-- ADR-0001…0005
-
-### M1: Domain and data
-- Domain entities and value objects (Money, Sku, Quantity)
-- Business rules with unit tests (credit, allocation, pricing, VAT)
-- EF Core DbContext, SQLite, migrations
-- Deterministic seed data (~50 customers, ~200 SKUs, 3 warehouses, price lists, history)
-
-### M2: First MCP tools over stdio → **v0.1.0**
-- Stdio host with the generic host + DI
-- Read tools: `search_customers`, `get_customer_credit`, `search_stock`, `check_stock`, `get_price`, `get_order_status`
-- `create_quote` with idempotency
-- Claude Desktop / Claude Code setup docs and a demo GIF
-- Integration test harness (MCP client ↔ server)
-
-### M3: Resources and prompts → **v0.2.0**
-- Resource templates (`customer://`, `order://`, `stock://`, `policy://`)
-- Prompts: `/quote-for-customer`, `/order-follow-up`, `/backorder-report`, `/needs-assessment`
-- Tool/resource contract snapshot test
-
-### M4: Orders and guardrails → **v0.3.0**
-- `convert_quote_to_order`, allocation and back-orders, `list_backorders`, `cancel_order`
-- Discount tiers + `request_discount_approval` + `apply_discount`
-- `request_human_review`, audit log + `audit://recent`
-- Quote expiry
-
-### M5: Ship it (containers + releases) → **v1.0.0**
-- Multi-stage Dockerfile, non-root, health check. `compose.yaml` with Postgres
-- PostgreSQL provider and Testcontainers integration tests
-- release-please, GHCR publish, SBOM, Trivy scan
-- Structured logging and OpenTelemetry
-
-### M6: Remote MCP on AWS → **v1.1.0**
-- Streamable HTTP host, auth, rate limiting, read-only vs read-write scopes
-- Terraform modules, remote state, `terraform plan` on PRs
-- OIDC deploy workflow, staging → prod with approvals
-- Runbook + cost notes (and how to tear it all down)
-
-### M7: Sales analytics and MEDDPICC → **v1.2.0**
-- Deal entity with MEDDPICC fields, `score_deal_qualification`
-- `reports://sales-summary/{period}`: revenue, top customers, win rate, quote→order conversion, back-order ageing
-- `/weekly-sales-summary` prompt
-
-### Stretch
-- Subscription / recurring order lines and a churn report
-- A sample agent client (Claude Agent SDK) that runs an end-to-end "quote to order" flow
-- Publish to an MCP registry. `dotnet tool` packaging for one-command install
+**Change from the previous plan:** the ERP order engine is now the foundation (M1–M4) rather than the whole product. Agents/playbooks (M3), services/subscriptions (M6), agent runtime (M7) and evals (M8) are new. AWS moves to M9 and analytics to M10.
 
 ---
 
-## 10. Definition of done (every PR)
+## 10. Course chapters (`docs/course/`)
+
+1. What is MCP? Tools, resources, prompts, transports
+2. Hello MCP in C#: one tool, connected to Claude
+3. Modelling a sales domain: offerings, customers, quotes (tests first)
+4. Persistence: EF Core, migrations, realistic seed data
+5. Real tools: validation, errors, descriptions written for LLMs
+6. **Agents as data:** profiles, playbooks, schemas, binding at connection
+7. **Guardrails in code:** why prompts aren't enough
+8. Orders, credit and back-orders: ERP rules
+9. Testing an MCP server end-to-end
+10. CI/CD, containers and releases
+11. Selling services and subscriptions
+12. **Building your own agent runtime** (Claude Agent SDK over HTTP)
+13. **Evaluating agents:** simulated buyers and scoring in CI
+14. Deploying to AWS with Terraform
+15. Analytics and MEDDPICC qualification
+
+---
+
+## 11. Definition of done (every PR)
 - [ ] Conventional Commit title, linked issue, PR template filled in
-- [ ] CI green: build, format, tests, CodeQL
-- [ ] New rules/tools have unit and integration tests
-- [ ] Tool descriptions and docs updated. ADR added if a decision changed
-- [ ] No secrets, no copyrighted third-party files (see `docs/research/reports/.gitignore`)
+- [ ] CI green: build, format, tests, schema validation, CodeQL
+- [ ] New rules/tools/playbooks have unit + integration tests (guardrail violations tested)
+- [ ] Docs, tool descriptions and ADRs updated
+- [ ] No secrets, no raw third-party files, no local AI tooling files
 
 ---
 
-## 11. Risks
+## 12. Risks
 
 | Risk | Mitigation |
 |---|---|
-| MCP SDK API changes | Pin versions, isolate SDK usage in the host projects, Dependabot PRs gated by tests |
-| Scope creep | Ship v1.0 at M5. Everything after it is optional |
-| AWS cost | Fargate Spot/smallest RDS or App Runner, `terraform destroy` documented, billing alarm |
-| Commit history unclear about AI involvement | `Co-Authored-By` trailers plus a "How this repo was built" section in the README |
+| **Scope creep** (now a platform) | v1.0 = products + 2 playbooks + guardrails + Docker. Everything else is post-v1 |
+| Prompt injection to bypass guardrails | ADR-0011/0012: enforcement in tools, agent bound at connection, adversarial persona in evals |
+| Eval cost and flakiness | Budget cap, small fixed scenario set, multiple runs per scenario with thresholds, manual/nightly only |
+| MCP SDK / Agent SDK API changes | Pin versions, isolate SDK code in host projects, Dependabot + tests |
+| Agents perceived as pushy or unethical | Honesty and disclosure rules, no outbound marketing, an ethics metric in evals |
+| AWS cost | Smallest tiers, `terraform destroy` documented, billing alarm |
 
 ---
 
-## 12. Open questions for you
-1. **Project name:** keep "Sales MCP", or something brandable (e.g. *OrderDesk MCP*, *Quotebook*)?
-2. **Course depth:** full chapters as written, or shorter "notes per milestone"?
-3. **Cloud:** AWS ECS Fargate (more DevOps to show) or App Runner (cheaper, simpler)?
-4. **Public from day one?** Recommended: yes, so the commit history is visible as it grows.
+## 13. Open questions
+1. **Product name:** keep "Sales MCP" or rebrand (e.g. *Sales Agent Kit*)?
+2. **Evals budget:** API key with a small monthly cap, or manual-only runs at first?
+3. **Chat UI (M7):** minimal Blazor page, or React (your other strong stack)?
