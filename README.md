@@ -15,6 +15,10 @@ The repo also works as a **step-by-step course** on building production-quality 
 | [AI in sales 2023–2026](docs/research/ai-in-sales-2023-2026.md) | What AI was used for, what worked, quarter-by-quarter timeline, buyer complaints |
 | [Fixing AI selling](docs/research/fixing-ai-selling.md) | How each complaint could have been fixed, with cases (Klarna, Air Canada, Artisan) |
 | [Classic sales guides](docs/research/classic-sales-guides.md) | Sales guides from 1887 to the 2000s and what they teach about AI-era selling |
+| [Sales data & benchmarks](docs/research/sales-data-benchmarks.md) | Win rates, cycles, quota attainment, funnel conversion, AI impact, order-to-cash KPIs |
+| [Sales book summaries](docs/research/sales-book-summaries.md) | SPIN, Strategic Selling, MEDDPICC, Sandler, Challenger, Gap, JOLT, Voss, Cialdini and more |
+| [ERP order-to-cash](docs/research/erp-order-to-cash.md) | How SYSPRO, SAP, Dynamics 365 and Odoo model quotes, orders, pricing, credit and back-orders |
+| [South African market](docs/research/south-africa-market.md) | SA e-commerce and B2B landscape, VAT, POPIA, CPA/ECTA, with design implications |
 
 ## Why
 
