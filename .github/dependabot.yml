@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # Keeps GitHub Actions pinned versions fresh once workflows land (M0).
+  # NuGet and Docker ecosystems are added when code and Dockerfiles exist.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+    labels: ["type: ci"]

@@ -1,0 +1,33 @@
+name: Feature / task
+description: A new capability, tool, or piece of milestone work
+title: "feat: "
+labels: ["type: feature"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should exist when this is done, and why?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / acceptance criteria
+      description: A checklist that defines "done".
+      value: |
+        - [ ]
+        - [ ] Tests added/updated
+        - [ ] Docs updated
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [domain, mcp, data, infra, course, other]
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / links
+      description: Plan sections, ADRs, research docs.
