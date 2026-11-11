@@ -11,3 +11,9 @@ Thumbs.db
 .vs/
 .vscode/
 .idea/
+
+# AI tooling / local assistant config (not project work)
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.mcp.json
