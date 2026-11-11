@@ -24,13 +24,21 @@ jobs:
       contents: read
       pull-requests: write
       id-token: write
+    env:
+      HAS_CLAUDE_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
     steps:
+      - name: Skip notice (no token configured)
+        if: env.HAS_CLAUDE_TOKEN != 'true'
+        run: echo "::notice title=Claude review skipped::CLAUDE_CODE_OAUTH_TOKEN secret is not set. Add it to enable automatic reviews (see CONTRIBUTING.md)."
+
       - name: Checkout
+        if: env.HAS_CLAUDE_TOKEN == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Review PR
+        if: env.HAS_CLAUDE_TOKEN == 'true'
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -39,12 +47,13 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            Review this pull request for the Sales MCP project (a C#/.NET MCP server for B2B sales orders;
-            see docs/PLAN.md and CONTRIBUTING.md).
+            Review this pull request for the Sales MCP project (a C#/.NET MCP server for building B2B
+            sales agents on an ERP-grade order engine; see docs/PLAN.md and CONTRIBUTING.md).
 
             Check:
-            - Correctness and business rules (credit checks, stock allocation, pricing/VAT, discount guardrails)
-            - Security (input validation, secrets, auth on mutating tools)
+            - Correctness and business rules (credit holds, stock allocation, pricing/VAT, discount guardrails)
+            - Guardrails are enforced in tools, not only in prompts (ADR-0011); agent/playbook YAML matches its schema
+            - Security (input validation, secrets, auth on mutating tools, prompt-injection paths around guardrails)
             - Tests for new rules/tools, and docs/ADRs kept in sync
             - The PR title is a valid Conventional Commit
             - No raw third-party files (PDFs, books) or local AI tooling files are committed
