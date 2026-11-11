@@ -23,6 +23,7 @@ The repo also works as a **step-by-step course** on building production-quality 
 | [Sales book summaries](docs/research/sales-book-summaries.md) | SPIN, Strategic Selling, MEDDPICC, Sandler, Challenger, Gap, JOLT, Voss, Cialdini and more |
 | [ERP order-to-cash](docs/research/erp-order-to-cash.md) | How SYSPRO, SAP, Dynamics 365, Odoo, Sage, Business One, NetSuite, Business Central, Acumatica, Epicor, JD Edwards and Infor model quotes, orders, pricing, credit and back-orders |
 | [South African market](docs/research/south-africa-market.md) | SA e-commerce and B2B landscape, VAT, POPIA, CPA/ECTA, with design implications |
+| [Guardrails](docs/research/guardrails.md) | Incidents (Chevy $1 Tahoe, Air Canada), OWASP LLM Top 10 and MCP risks, agentic-commerce limits, a 33-item guardrail catalogue by enforcement layer |
 
 ## Why
 

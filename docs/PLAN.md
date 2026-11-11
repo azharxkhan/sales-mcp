@@ -41,6 +41,8 @@
 | **ADR-0012** | **Agent bound at connection, not chosen by the model** | stdio: `--agent <id>` at startup. HTTP: API key → agent profile. The model can't switch to a laxer agent mid-conversation | Prevents guardrail escape through prompt injection |
 | **ADR-0013** | **Playbooks and agents as data** | Versioned YAML files (`agents/*.yaml`, `playbooks/*.yaml`), validated against a JSON Schema at startup and in CI | Reviewable in PRs, testable, no code change to add a selling style |
 | **ADR-0014** | **B2B-first** | Business buyers, accounts, credit terms, quotes. B2C playbooks possible later | Strongest research and domain knowledge. Avoids consumer-law scope early |
+| **ADR-0015** | **Commitments only through tool-issued documents** | Prices come only from the price resolver. Offers exist only as quotes/orders created by tools. Chat text is never an offer | The Chevrolet "$1 Tahoe" and Air Canada lessons ([guardrails §1](research/guardrails.md#1-what-happens-without-guardrails)) |
+| **ADR-0016** | **Customer bound to the session** | In self-service, the buyer's identity comes from config/auth, not from model arguments. Every query is filtered by agent and customer | Prevents data leaks and confused-deputy attacks (OWASP LLM02, MCP guidance) |
 
 ---
 
@@ -138,6 +140,20 @@ Deal (MEDDPICC fields)                            (M10)
 7. **Disclosure:** every customer-facing output from mutating tools carries "performed by AI agent {name}".
 8. **Idempotency:** mutating tools take a `requestId`.
 9. **Audit:** every tool call is logged with the agent and customer.
+
+### 4.1 Guardrails
+
+The full catalogue (33 guardrails in six groups, each mapped to an enforcement layer and a milestone) is in **[research/guardrails.md](research/guardrails.md#4-guardrail-catalogue)**. The essentials:
+
+| Layer | What it does | Examples |
+|---|---|---|
+| **L1 Config** | Schema-validated agent/playbook YAML. Unsafe settings are impossible | `disclose_ai` can't be false. Discount caps. Tool allowlist. Value caps |
+| **L2 Tool/domain** (hard) | Rules in code that reject or hold the call | Price resolver only. Discount tiers. Credit holds. Quote validity. Buyer confirms the exact quote. Playbook max options |
+| **L3 Server policy** | Applied to every call | Agent + customer binding. Rate limits and call caps. Audit log. Disclosure stamp. Kill switch |
+| **L4 Prompt** (soft) | Style and scope guidance | Stay on topic. No pressure tactics. Explain handoffs |
+| **L5 Verify** | Prove it | Contract snapshot. Adversarial eval personas must cause **zero** guardrail breaks. Guardrail-trigger metrics |
+
+**Known limit:** in Option A the host model writes the free-text replies, so the server can only guide them. That's why every commitment must be a tool-issued document (ADR-0015). Option B (M7) adds **output checks** on every reply.
 
 ---
 
@@ -238,14 +254,14 @@ sales-mcp/
 
 | Milestone | Release | Scope |
 |---|---|---|
-| **M0: Foundation** | — | Solution scaffold, quality gates, CI, CodeQL, licence/security docs, ADRs 0001–0014, README diagram |
+| **M0: Foundation** | — | Solution scaffold, quality gates, CI, CodeQL, licence/security docs, ADRs 0001–0016, README diagram |
 | **M1: Domain & data** | — | `Offering` model (product implemented, service/plan stubs), customers, price lists, VAT codes, quotes/orders skeleton, **Acme Distributors** seed data (realistic, from [benchmarks](research/sales-data-benchmarks.md)) |
 | **M2: First MCP tools** | v0.1.0 | Stdio host, `search_catalog`, `get_customer`, `check_stock`, `get_price`, `create_quote`, `get_order_status`. Claude setup docs + demo GIF. Integration test harness |
 | **M3: Agents & playbooks** | v0.2.0 | YAML agent/playbook files + JSON Schema, loader, `--agent` binding, `get_agent_profile`, `agent://`/`playbook://` resources, `/sell` + `/needs-assessment` prompts, `qualify`, `recommend`, **`consultative-spin` and `jolt-decisive`**, playbook rule enforcement |
-| **M4: Orders & guardrails** | v0.3.0 | Quote → order, credit hold-and-release, back-orders, discount tiers + approval, `request_human_review`, honesty checks, AI disclosure, audit log |
+| **M4: Orders & guardrails** | v0.3.0 | Quote → order (with buyer confirmation), credit hold-and-release, back-orders, discount tiers + approval, per-order/day value caps, `request_human_review`, honesty checks, AI disclosure, rate limits, audit log, agent kill switch |
 | **M5: Ship it** | **v1.0.0** | Docker + compose, Postgres + Testcontainers, release automation, GHCR, SBOM, Trivy, OpenTelemetry |
 | **M6: Services & subscriptions** | v1.1.0 | Service and Plan offerings + tools, **Nimbus IT** and **LedgerLite** seeds, `transactional-fast` + `account-expansion` playbooks |
-| **M7: Agent runtime (Option B)** | v1.2.0 | Streamable HTTP host + API-key → agent binding, Claude Agent SDK runtime, minimal web chat UI |
+| **M7: Agent runtime (Option B)** | v1.2.0 | Streamable HTTP host + API-key → agent and customer binding, Claude Agent SDK runtime, **output guardrail checks on every reply**, minimal web chat UI |
 | **M8: Evaluation harness** | v1.3.0 | Buyer personas, scenarios, scoring, `evals.yml`, results report, `challenger-insight` playbook |
 | **M9: Cloud deploy** | v1.4.0 | Terraform on AWS, OIDC CD, staging → prod, runbook, cost notes |
 | **M10: Analytics & qualification** | v1.5.0 | MEDDPICC `Deal`, `score_deal_qualification`, sales-summary resources, `/weekly-sales-summary` |
@@ -289,7 +305,7 @@ sales-mcp/
 | Risk | Mitigation |
 |---|---|
 | **Scope creep** (now a platform) | v1.0 = products + 2 playbooks + guardrails + Docker. Everything else is post-v1 |
-| Prompt injection to bypass guardrails | ADR-0011/0012: enforcement in tools, agent bound at connection, adversarial persona in evals |
+| Prompt injection to bypass guardrails | ADR-0011/0012/0015/0016: enforcement in tools, agent and customer bound at connection, commitments only via documents, adversarial personas in evals ([guardrails](research/guardrails.md)) |
 | Eval cost and flakiness | Budget cap, small fixed scenario set, multiple runs per scenario with thresholds, manual/nightly only |
 | MCP SDK / Agent SDK API changes | Pin versions, isolate SDK code in host projects, Dependabot + tests |
 | Agents perceived as pushy or unethical | Honesty and disclosure rules, no outbound marketing, an ethics metric in evals |
