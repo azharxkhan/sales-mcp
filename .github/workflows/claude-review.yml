@@ -1,0 +1,55 @@
+name: Claude PR review
+
+# Automatic review on every non-draft PR from the owner/collaborators.
+# Skips Dependabot (no secrets on those runs) and PRs from forks.
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: |
+      github.event.pull_request.draft == false &&
+      github.actor != 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Review PR
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Review this pull request for the Sales MCP project (a C#/.NET MCP server for B2B sales orders;
+            see docs/PLAN.md and CONTRIBUTING.md).
+
+            Check:
+            - Correctness and business rules (credit checks, stock allocation, pricing/VAT, discount guardrails)
+            - Security (input validation, secrets, auth on mutating tools)
+            - Tests for new rules/tools, and docs/ADRs kept in sync
+            - The PR title is a valid Conventional Commit
+            - No raw third-party files (PDFs, books) or local AI tooling files are committed
+
+            Use inline comments for specific lines and one top-level summary comment.
+            Be concise; don't nitpick formatting that `dotnet format` would catch.
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
