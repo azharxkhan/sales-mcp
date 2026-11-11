@@ -255,14 +255,14 @@ sales-mcp/
 | Milestone | Release | Scope |
 |---|---|---|
 | **M0: Foundation** | — | Solution scaffold, quality gates, CI, CodeQL, licence/security docs, ADRs 0001–0016, README diagram |
-| **M1: Domain & data** | — | `Offering` model (product implemented, service/plan stubs), customers, price lists, VAT codes, quotes/orders skeleton, **Acme Distributors** seed data (realistic, from [benchmarks](research/sales-data-benchmarks.md)) |
+| **M1: Domain & data** | — | `Offering` model (product implemented, service/plan stubs) + `OfferingRule` (requires/excludes/recommends), customers, price lists, VAT codes, quotes/orders skeleton, **Acme Distributors** seed data (realistic, from [benchmarks](research/sales-data-benchmarks.md)) |
 | **M2: First MCP tools** | v0.1.0 | Stdio host, `search_catalog`, `get_customer`, `check_stock`, `get_price`, `create_quote`, `get_order_status`. Claude setup docs + demo GIF. Integration test harness |
 | **M3: Agents & playbooks** | v0.2.0 | YAML agent/playbook files + JSON Schema, loader, `--agent` binding, `get_agent_profile`, `agent://`/`playbook://` resources, `/sell` + `/needs-assessment` prompts, `qualify`, `recommend`, **`consultative-spin` and `jolt-decisive`**, playbook rule enforcement |
 | **M4: Orders & guardrails** | v0.3.0 | Quote → order (with buyer confirmation), credit hold-and-release, back-orders, discount tiers + approval, per-order/day value caps, `request_human_review`, honesty checks, AI disclosure, rate limits, audit log, agent kill switch |
 | **M5: Ship it** | **v1.0.0** | Docker + compose, Postgres + Testcontainers, release automation, GHCR, SBOM, Trivy, OpenTelemetry |
-| **M6: Services & subscriptions** | v1.1.0 | Service and Plan offerings + tools, **Nimbus IT** and **LedgerLite** seeds, `transactional-fast` + `account-expansion` playbooks |
+| **M6: Services & subscriptions** | v1.1.0 | Service (rate cards; T&M / fixed / not-to-exceed / retainer) and Plan (flat / per-unit / tiered / volume / hybrid) offerings + tools ([CPQ research](research/cpq-services-subscriptions.md)), **Nimbus IT** and **LedgerLite** seeds, `transactional-fast` + `account-expansion` playbooks |
 | **M7: Agent runtime (Option B)** | v1.2.0 | Streamable HTTP host + API-key → agent and customer binding, Claude Agent SDK runtime, **output guardrail checks on every reply**, minimal web chat UI |
-| **M8: Evaluation harness** | v1.3.0 | Buyer personas, scenarios, scoring, `evals.yml`, results report, `challenger-insight` playbook |
+| **M8: Evaluation harness** | v1.3.0 | τ-bench-style simulated buyers scored on end state, pass^k reliability, code + LLM-judge graders, UX metrics (repeat questions, human-request compliance), `evals.yml`, report ([design](research/agent-evaluation.md)), `challenger-insight` playbook |
 | **M9: Cloud deploy** | v1.4.0 | Terraform on AWS, OIDC CD, staging → prod, runbook, cost notes |
 | **M10: Analytics & qualification** | v1.5.0 | MEDDPICC `Deal`, `score_deal_qualification`, sales-summary resources, `/weekly-sales-summary` |
 | *Stretch* | — | B2C playbooks, agent builder tool (`create_agent`), MCP registry publish, `dotnet tool` install |

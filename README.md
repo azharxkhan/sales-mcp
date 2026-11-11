@@ -26,6 +26,11 @@ The repo also works as a **step-by-step course** on building production-quality 
 | [Guardrails](docs/research/guardrails.md) | Incidents (Chevy $1 Tahoe, Air Canada), OWASP LLM Top 10 and MCP risks, agentic-commerce limits, a 33-item guardrail catalogue by enforcement layer |
 | [Guardrail engineering](docs/research/guardrails-engineering.md) | How guardrails are built (classifiers, instruction hierarchy, design patterns, elicitation), bypass categories, and the fix for each |
 | [MCP knowledge base](docs/research/mcp-knowledge-base.md) | Curated MCP reading list: spec 2026-07-28, C# SDK 2.x, courses, auth, security |
+| [Conversational UX](docs/research/conversational-ux.md) | Why AI and sales agents are hard to talk to (loops, gated pricing, deflection, dark patterns) and 10 design principles |
+| [Competitors & existing MCPs](docs/research/competitors-and-existing-mcps.md) | Agentforce, Breeze, CRM/commerce/ERP MCP servers, and the gaps Sales MCP fills |
+| [Agent evaluation](docs/research/agent-evaluation.md) | τ-bench, pass^k, grader types, and the M8 harness design (personas, metrics, thresholds, cost) |
+| [CPQ, services & subscriptions](docs/research/cpq-services-subscriptions.md) | Configure-price-quote, service pricing models and scoping, subscription/usage billing, M6 domain design |
+| [Sales conversation design](docs/research/sales-conversation-design.md) | Discovery question bank, LAER objection handling, negotiation, closing and tone for playbook prompts |
 
 ## Why
 
