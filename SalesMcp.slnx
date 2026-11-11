@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SalesMcp.Application/SalesMcp.Application.csproj" />
+    <Project Path="src/SalesMcp.Domain/SalesMcp.Domain.csproj" />
+    <Project Path="src/SalesMcp.Infrastructure/SalesMcp.Infrastructure.csproj" />
+    <Project Path="src/SalesMcp.Server.Stdio/SalesMcp.Server.Stdio.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SalesMcp.Application.Tests/SalesMcp.Application.Tests.csproj" />
+    <Project Path="tests/SalesMcp.Domain.Tests/SalesMcp.Domain.Tests.csproj" />
+    <Project Path="tests/SalesMcp.IntegrationTests/SalesMcp.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

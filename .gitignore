@@ -17,3 +17,13 @@ Thumbs.db
 CLAUDE.md
 CLAUDE.local.md
 .mcp.json
+
+# .NET build output and tooling
+bin/
+obj/
+*.user
+*.suo
+TestResults/
+*.coverage
+*.trx
+artifacts/
