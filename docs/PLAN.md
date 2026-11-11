@@ -28,7 +28,7 @@
 | # | Decision | Choice | Why |
 |---|---|---|---|
 | ADR-0001 | Language / runtime | **C# on .NET 10 (LTS)** | Your strongest stack. C# MCP examples are rare, so the repo stands out |
-| ADR-0002 | MCP SDK | Official **`ModelContextProtocol`** NuGet package (+ `ModelContextProtocol.AspNetCore`). Pin the latest stable at M0 | Official SDK, attribute-based tools, generic host |
+| ADR-0002 | MCP SDK | Official **`ModelContextProtocol`** NuGet package, **2.x** (+ `ModelContextProtocol.AspNetCore`), targeting spec **2026-07-28**. Pin at M0 ([MCP knowledge base](research/mcp-knowledge-base.md)) | Official SDK, attribute-based tools, generic host |
 | ADR-0003 | Domain | **B2B selling** of products, services and subscriptions, on an **ERP-grade order engine** | Broad enough to be a platform. ERP rigour makes it more than a toy |
 | ADR-0004 | Architecture | **Clean / layered**: Domain → Application → Infrastructure → MCP host (→ Agent runtime later) | Rules testable without MCP or AI |
 | ADR-0005 | Persistence | **EF Core**. SQLite locally, PostgreSQL in Docker/cloud | Zero-setup demo, realistic production database |
@@ -143,12 +143,12 @@ Deal (MEDDPICC fields)                            (M10)
 
 ### 4.1 Guardrails
 
-The full catalogue (33 guardrails in six groups, each mapped to an enforcement layer and a milestone) is in **[research/guardrails.md](research/guardrails.md#4-guardrail-catalogue)**. The essentials:
+The full catalogue (33 guardrails in six groups, each mapped to an enforcement layer and a milestone) is in **[research/guardrails.md](research/guardrails.md#4-guardrail-catalogue)**. How guardrails are built, the bypass categories we test against, and the fix for each are in **[research/guardrails-engineering.md](research/guardrails-engineering.md)**. The essentials:
 
 | Layer | What it does | Examples |
 |---|---|---|
 | **L1 Config** | Schema-validated agent/playbook YAML. Unsafe settings are impossible | `disclose_ai` can't be false. Discount caps. Tool allowlist. Value caps |
-| **L2 Tool/domain** (hard) | Rules in code that reject or hold the call | Price resolver only. Discount tiers. Credit holds. Quote validity. Buyer confirms the exact quote. Playbook max options |
+| **L2 Tool/domain** (hard) | Rules in code that reject or hold the call | Price resolver only. Absolute/cumulative discount tiers. Credit holds. Quote validity. Buyer confirms the exact quote via **MCP elicitation**. Playbook max options |
 | **L3 Server policy** | Applied to every call | Agent + customer binding. Rate limits and call caps. Audit log. Disclosure stamp. Kill switch |
 | **L4 Prompt** (soft) | Style and scope guidance | Stay on topic. No pressure tactics. Explain handoffs |
 | **L5 Verify** | Prove it | Contract snapshot. Adversarial eval personas must cause **zero** guardrail breaks. Guardrail-trigger metrics |

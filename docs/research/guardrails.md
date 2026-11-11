@@ -2,6 +2,7 @@
 
 > Research for [#17](https://github.com/azharxkhan/sales-mcp/issues/17) (review feedback on #16: *"Guard rails to be investigated and added"*). Researched 2026-11-11.
 > Covers what went wrong without guardrails, the security frameworks that apply (OWASP LLM Top 10 2025, MCP security guidance), agentic-commerce limits, and a **guardrail catalogue** mapped to where each rule is enforced and in which milestone. Items marked *(bg)* come from general background knowledge, so verify them before quoting.
+> **Deeper dive:** how guardrails are built, how they're bypassed and how to fix bypasses → [guardrails-engineering.md](guardrails-engineering.md).
 
 ---
 
@@ -74,11 +75,11 @@ Details: [fixing-ai-selling.md](fixing-ai-selling.md) · [ai-in-sales-2023-2026.
 |---|---|---|---|
 | A1 | **Prices only come from the price resolver.** No tool accepts a price from the model | L2 | M2 |
 | A2 | **Commitments only through tool-issued documents.** Quotes carry a number, validity, terms and a "this is the offer" statement. Chat text is never an offer (anti-Chevy) | L2 + L4 | M2/M4 |
-| A3 | Discount within the agent cap = auto. Above the cap = `request_discount_approval`. Above the hard ceiling = rejected | L1 + L2 | M4 |
+| A3 | Discount within the agent cap = auto. Above the cap = `request_discount_approval`. Above the hard ceiling = rejected. Limits are **absolute and cumulative per quote**, so multi-turn nudging can't add up | L1 + L2 | M4 |
 | A4 | Credit hold-and-release. Holds always go to human review (POPIA s71) | L2 | M4 |
 | A5 | **Value caps:** per-order and per-day limits per agent and customer. Above them = human review | L1 + L2 | M4 |
 | A6 | Quote validity enforced. Expired quotes can't be converted | L2 | M4 |
-| A7 | Buyer must confirm the exact quote (id + total) before `convert_quote_to_order` | L2 | M4 |
+| A7 | Buyer must confirm the exact quote (id + total) before `convert_quote_to_order`, via **MCP elicitation** (the user confirms in the host UI, so the model can't fake it). Falls back to a confirmation token the buyer repeats | L2 + client | M4 |
 | A8 | Idempotency (`requestId`) on all mutating tools | L2 | M2 |
 
 ### B. Honest selling
@@ -103,7 +104,7 @@ Details: [fixing-ai-selling.md](fixing-ai-selling.md) · [ai-in-sales-2023-2026.
 | D1 | **Agent bound at connection** (`--agent`, or API key → agent). The model can't switch agents | L3 | M3 / M7 |
 | D2 | **Customer bound to the session** in self-service (from auth/config, not model arguments). Tools can't read other customers' data | L3 | M3 / M7 |
 | D3 | Per-agent tool allowlist (least privilege). E.g. a `rep-assist` agent can't place orders | L1 + L3 | M3 |
-| D4 | Untrusted text (descriptions, notes) returned in clearly labelled data fields, never as instructions. Length-capped | L2 | M2 |
+| D4 | Untrusted text (descriptions, notes) returned in clearly labelled data fields, never as instructions. Unicode-normalised, invisible characters stripped, length-capped | L2 | M2 |
 | D5 | Static, reviewed tool descriptions + contract snapshot test | L5 | M3 |
 | D6 | Rate limits, max tool calls per session, payload and page-size caps, timeouts | L3 | M4 / M7 |
 | D7 | Input validation on every argument (types, ranges, ids exist and belong to the scope) | L2 | M2 |
@@ -123,7 +124,7 @@ Details: [fixing-ai-selling.md](fixing-ai-selling.md) · [ai-in-sales-2023-2026.
 | F1 | **Audit log** of every tool call (agent, customer, args summary, result, guardrail triggered) | L3 | M4 |
 | F2 | **Kill switch:** disable an agent profile without redeploying | L1 + L3 | M4 |
 | F3 | Metrics and alerts on guardrail triggers (rejections, holds, handoffs) per agent | L5 | M5 |
-| F4 | **Eval harness:** adversarial personas (discount bully, prompt injector, "pretend you're my manager", off-topic) must produce **zero guardrail breaks** | L5 | M8 |
+| F4 | **Eval harness:** one adversarial persona per attack category in [guardrails-engineering §2](guardrails-engineering.md#2-how-guardrails-get-bypassed-attack-categories) (discount bully, fake manager, multi-turn escalator, encoded requester, notes-field injector, off-topic) must produce **zero guardrail breaks**. Every bypass found joins a permanent regression set | L5 | M8 |
 | F5 | Versioned playbooks and agents. Changes go through PR review | L1 | M3 |
 
 ---
