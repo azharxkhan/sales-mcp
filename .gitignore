@@ -1,0 +1,13 @@
+# Raw third-party files (reports, books) are never committed: link to originals in the docs.
+*.pdf
+*.epub
+*.mobi
+*.docx
+*.xlsx
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vs/
+.vscode/
+.idea/
