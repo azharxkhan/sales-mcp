@@ -8,7 +8,24 @@ Configure an agent (**what** it sells: products, services or subscriptions; **ho
 
 The repo also works as a **step-by-step course** on building production-quality MCP servers, AI agents (including evaluating them in CI) and the DevOps around them.
 
-> **Status: planning and research.** No code yet. Start with the plan and the research below.
+> **Status: M0 Foundation.** The solution skeleton exists, and features start in M2. Start with the plan and the research below.
+
+## Build and test
+
+Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download) (pinned in `global.json`).
+
+```bash
+dotnet build SalesMcp.slnx
+dotnet test --solution SalesMcp.slnx
+```
+
+| Project | Role |
+|---|---|
+| `src/SalesMcp.Domain` | Entities and business rules. No dependencies |
+| `src/SalesMcp.Application` | Use cases, guardrail and playbook enforcement. Depends on Domain only |
+| `src/SalesMcp.Infrastructure` | EF Core, seeding, YAML agent/playbook loading |
+| `src/SalesMcp.Server.Stdio` | MCP host over stdio (M2) |
+| `tests/*` | xUnit v3 on Microsoft.Testing.Platform. Layering is enforced by architecture tests |
 
 ## Docs
 
