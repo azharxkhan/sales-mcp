@@ -34,6 +34,7 @@ dotnet test --solution SalesMcp.slnx
 | Document | What's in it |
 |---|---|
 | [Project plan](docs/PLAN.md) | Vision, decisions (ADRs), agent profiles and playbooks, domain model, MCP surface, architecture, evals, DevOps, milestones |
+| [Architecture decisions](docs/adr/README.md) | ADR-0001 to ADR-0016: stack, architecture, transports, agent design and the guardrail core, each with context, trade-offs and alternatives |
 | [State of sales 2026](docs/research/sales-landscape-2026.md) | Trends, then vs now, how selling evolved, reading list |
 | [AI in sales 2023–2026](docs/research/ai-in-sales-2023-2026.md) | What AI was used for, what worked, quarter-by-quarter timeline, buyer complaints |
 | [Fixing AI selling](docs/research/fixing-ai-selling.md) | How each complaint could have been fixed, with cases (Klarna, Air Canada, Artisan) |
