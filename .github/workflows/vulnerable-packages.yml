@@ -1,0 +1,46 @@
+name: Vulnerable packages
+
+# Fails when any NuGet package, direct or transitive, has a known High or Critical
+# vulnerability (issue #6). Also runs daily, because new advisories appear without any code change.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "41 4 * * *" # daily, 04:41 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: vulnerable-packages-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  audit:
+    name: NuGet vulnerability audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET (from global.json)
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore SalesMcp.slnx
+
+      - name: List vulnerable packages
+        run: dotnet list SalesMcp.slnx package --vulnerable --include-transitive --format json > vulnerable.json
+
+      - name: Fail on High or Critical
+        run: python3 .github/scripts/check_vulnerable_packages.py vulnerable.json
