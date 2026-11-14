@@ -1,0 +1,13 @@
+<Project>
+  <!-- Settings shared by every test project. MSBuild stops at the nearest Directory.Build.props,
+       so import the repo-level one (if present) first. -->
+  <PropertyGroup>
+    <_ParentBuildProps>$([MSBuild]::GetPathOfFileAbove(Directory.Build.props, $(MSBuildThisFileDirectory)..))</_ParentBuildProps>
+  </PropertyGroup>
+  <Import Project="$(_ParentBuildProps)" Condition="'$(_ParentBuildProps)' != ''" />
+
+  <ItemGroup>
+    <!-- Code coverage for Microsoft.Testing.Platform, enabled with the coverage option of dotnet test (issue #4). -->
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+  </ItemGroup>
+</Project>
