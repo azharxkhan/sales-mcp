@@ -12,6 +12,7 @@ Closes #
 - [ ] docs
 - [ ] ci / chore
 - [ ] test / refactor
+- [ ] perf / build
 
 ## Checklist
 
