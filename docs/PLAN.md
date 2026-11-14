@@ -25,6 +25,8 @@
 
 ## 2. Key decisions (each becomes an ADR in `docs/adr/`)
 
+Full records with context, trade-offs and alternatives: **[docs/adr](adr/README.md)**.
+
 | # | Decision | Choice | Why |
 |---|---|---|---|
 | ADR-0001 | Language / runtime | **C# on .NET 10 (LTS)** | Your strongest stack. C# MCP examples are rare, so the repo stands out |
