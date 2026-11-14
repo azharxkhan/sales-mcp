@@ -1,0 +1,54 @@
+name: CodeQL
+
+# Static analysis for security bugs in C# (issue #6). Results appear under Security → Code scanning.
+# Advanced setup (this file) rather than GitHub's default setup, so the build mode, queries and
+# schedule are versioned with the code. Don't enable default setup as well: they conflict.
+
+on:
+  # Any base branch, so stacked PRs are scanned too.
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "27 3 * * 1" # weekly, Monday 03:27 UTC, to pick up new queries
+  workflow_dispatch:
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (C#)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write # upload results
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET (from global.json)
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          build-mode: manual
+          queries: security-extended
+
+      - name: Build
+        run: dotnet build SalesMcp.slnx -c Release
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:csharp
