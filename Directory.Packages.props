@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup Label="Testing">
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.3" />
   </ItemGroup>
 </Project>
