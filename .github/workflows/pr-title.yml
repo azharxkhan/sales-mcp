@@ -1,0 +1,47 @@
+name: PR title
+
+# We squash-merge, so the PR title becomes the commit on main. Check that it is a valid
+# Conventional Commit so changelogs and releases work (issue #5, ADR-0008).
+# The job only reads the title from the event payload (no checkout), so the read-only
+# token that fork PRs get is enough.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: pr-title-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint:
+    name: Conventional Commit title
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Keep in sync with CONTRIBUTING.md.
+          types: |
+            feat
+            fix
+            docs
+            ci
+            chore
+            test
+            refactor
+            perf
+            build
+          # Scopes are optional and free-form, e.g. feat(mcp): …, docs(adr): …
+          requireScope: false
+          # The subject must not start with an upper-case letter: "add x", not "Add x".
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" in the PR title "{title}" must start with a lower-case letter,
+            for example "feat(mcp): add check_stock tool".

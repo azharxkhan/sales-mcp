@@ -10,6 +10,9 @@ Thanks for your interest! This project is also a course, so the process is kept 
    `feat(mcp): add check_stock tool` · `fix(domain): correct VAT rounding` · `docs: add chapter 2`
 4. **Open a PR** using the template. `main` is protected: PRs only, linear history, no force-pushes, conversations must be resolved.
 5. **Squash-merge.** The PR title becomes the commit message on `main`, so make it a valid Conventional Commit.
+   The **PR title** check enforces this: `type(optional-scope): subject`, where `type` is one of
+   `feat`, `fix`, `docs`, `ci`, `chore`, `test`, `refactor`, `perf`, `build`, and the subject starts with a
+   lower-case letter. Add `!` after the type or scope for a breaking change. Editing the title re-runs the check.
 
 ## Code quality
 
