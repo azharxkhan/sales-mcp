@@ -1,5 +1,7 @@
 # Sales MCP
 
+[![CI](https://github.com/azharxkhan/sales-mcp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/azharxkhan/sales-mcp/actions/workflows/ci.yml)
+
 An open-source **Model Context Protocol (MCP) server for building B2B sales agents**, written in C#/.NET.
 
 Configure an agent (**what** it sells: products, services or subscriptions; **how** it sells: research-backed playbooks such as consultative SPIN or decisive JOLT; its persona; and its guardrails), and any MCP-capable AI becomes that agent. Under the hood is an ERP-grade order engine: quotes, pricing, credit holds, back-orders.
