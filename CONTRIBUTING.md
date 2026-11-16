@@ -11,6 +11,18 @@ Thanks for your interest! This project is also a course, so the process is kept 
 4. **Open a PR** using the template. `main` is protected: PRs only, linear history, no force-pushes, conversations must be resolved.
 5. **Squash-merge.** The PR title becomes the commit message on `main`, so make it a valid Conventional Commit.
 
+## Code quality
+
+The build enforces `.editorconfig` style rules and .NET analyzers, and **warnings fail the build**. Before opening a PR:
+
+```bash
+dotnet format SalesMcp.slnx
+dotnet build SalesMcp.slnx -c Release
+dotnet test --solution SalesMcp.slnx -c Release
+```
+
+Line endings are normalised to LF by `.gitattributes`.
+
 ## Labels
 
 | Prefix | Meaning |
