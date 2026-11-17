@@ -1,6 +1,6 @@
 # Sales MCP
 
-[![CI](https://github.com/azharxkhan/sales-mcp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/azharxkhan/sales-mcp/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/azharxkhan/sales-mcp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/azharxkhan/sales-mcp/actions/workflows/ci.yml) [![CodeQL](https://github.com/azharxkhan/sales-mcp/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/azharxkhan/sales-mcp/actions/workflows/codeql.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4.svg)](global.json)
 
 An open-source **Model Context Protocol (MCP) server for building B2B sales agents**, written in C#/.NET.
 
@@ -10,7 +10,75 @@ Configure an agent (**what** it sells: products, services or subscriptions; **ho
 
 The repo also works as a **step-by-step course** on building production-quality MCP servers, AI agents (including evaluating them in CI) and the DevOps around them.
 
-> **Status: M0 Foundation.** The solution skeleton exists, and features start in M2. Start with the plan and the research below.
+> **Status: M0 Foundation, nearly done.** Quality gates, CI, security scanning and the decision records are in place. There's nothing to run yet: the first runnable version is **v0.1.0** (M2). See the [roadmap](#roadmap).
+
+## Quick start
+
+*Coming in [M2](https://github.com/azharxkhan/sales-mcp/milestone/3) (v0.1.0).* This section will show how to connect the server to Claude Desktop or Claude Code, pick an agent, and create your first quote. Until then, see [Build and test](#build-and-test).
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph clients["MCP clients"]
+        direction LR
+        host["MCP host<br/>Claude Desktop, Claude Code, any client<br/><i>Option A, M2–M5</i>"]
+        runtime["SalesMcp.AgentRuntime<br/>own agent loop, chat UI, evals<br/><i>Option B, M7–M8</i>"]
+    end
+
+    subgraph hosts["MCP hosts (agent bound at connection)"]
+        direction LR
+        stdio["SalesMcp.Server.Stdio<br/>stdio, --agent id"]
+        http["SalesMcp.Server.Http<br/>Streamable HTTP, API key → agent<br/><i>M7</i>"]
+    end
+
+    app["SalesMcp.Application<br/>use cases, guardrails,<br/>playbook rules"]
+    domain["SalesMcp.Domain<br/>offerings, pricing, credit,<br/>quotes, orders"]
+    infra["SalesMcp.Infrastructure<br/>EF Core, YAML agent loader,<br/>seed data"]
+    db[("SQLite (local)<br/>PostgreSQL (Docker, cloud)")]
+    files[/"agents/*.yaml<br/>playbooks/*.yaml"/]
+
+    host <-->|stdio| stdio
+    runtime <-->|HTTP| http
+    stdio --> app
+    http --> app
+    app --> domain
+    infra --> app
+    infra --> domain
+    infra --> db
+    infra --> files
+```
+
+Dependencies point inward: Domain depends on nothing, Application on Domain, Infrastructure implements Application's interfaces, and only the hosts reference the MCP SDK ([ADR-0004](docs/adr/0004-clean-layered-architecture.md)). Architecture tests enforce this in CI.
+
+### What makes it different
+
+The guardrails that matter are designed in, not prompted:
+
+| Rule | Decision |
+|---|---|
+| Every rule that matters (discount caps, credit holds, value caps, playbook limits) is enforced by the tools, so a model can't talk its way past it | [ADR-0011](docs/adr/0011-guardrails-in-tools-not-prompts.md) |
+| The agent is fixed when the connection starts. The model can't switch to a laxer one | [ADR-0012](docs/adr/0012-agent-bound-at-connection.md) |
+| Prices and offers exist only as documents the tools create. Chat text is never an offer | [ADR-0015](docs/adr/0015-commitments-only-through-tool-issued-documents.md) |
+| The buyer's identity comes from configuration or authentication, never from model arguments | [ADR-0016](docs/adr/0016-customer-bound-to-session.md) |
+
+## Roadmap
+
+| Milestone | Release | Scope | Status |
+|---|---|---|---|
+| [M0: Foundation](https://github.com/azharxkhan/sales-mcp/milestone/1) | — | Scaffold, quality gates, CI, security scanning, ADRs, community files | 🔄 In progress |
+| [M1: Domain & data](https://github.com/azharxkhan/sales-mcp/milestone/2) | — | Offerings, customers, price resolver with VAT, stock, quotes and orders, Acme Distributors seed data | ⏳ Planned |
+| [M2: First MCP tools](https://github.com/azharxkhan/sales-mcp/milestone/3) | v0.1.0 | Stdio host; catalog, customer, stock, price, quote and order-status tools; integration test harness | ⏳ Planned |
+| [M3: Agents & playbooks](https://github.com/azharxkhan/sales-mcp/milestone/4) | v0.2.0 | YAML agents and playbooks with JSON Schema, `--agent` binding, `qualify`, `recommend`, SPIN and JOLT playbooks | ⏳ Planned |
+| [M4: Orders & guardrails](https://github.com/azharxkhan/sales-mcp/milestone/5) | v0.3.0 | Quote → order with buyer confirmation, credit holds, back-orders, discount tiers, human handoff, audit log, kill switch | ⏳ Planned |
+| [M5: Ship it](https://github.com/azharxkhan/sales-mcp/milestone/6) | **v1.0.0** | Docker, PostgreSQL, release automation, SBOM, image scanning, OpenTelemetry | ⏳ Planned |
+| [M6: Services & subscriptions](https://github.com/azharxkhan/sales-mcp/milestone/7) | v1.1.0 | Rate cards and scoping, plans and usage pricing, two more demo businesses and playbooks | ⏳ Planned |
+| [M7: Agent runtime](https://github.com/azharxkhan/sales-mcp/milestone/8) | v1.2.0 | Streamable HTTP host, own agent loop with output checks on every reply, web chat UI | ⏳ Planned |
+| [M8: Evaluation harness](https://github.com/azharxkhan/sales-mcp/milestone/9) | v1.3.0 | Simulated buyers, graded end states, pass^k reliability, evals in CI | ⏳ Planned |
+| [M9: Cloud deploy](https://github.com/azharxkhan/sales-mcp/milestone/10) | v1.4.0 | Terraform on AWS, OIDC deploys, staging → production | ⏳ Planned |
+| [M10: Analytics & qualification](https://github.com/azharxkhan/sales-mcp/milestone/11) | v1.5.0 | MEDDPICC deals, qualification scoring, sales summary reports | ⏳ Planned |
+
+Full scope and reasoning: [docs/PLAN.md §9](docs/PLAN.md#9-milestones).
 
 ## Build and test
 
