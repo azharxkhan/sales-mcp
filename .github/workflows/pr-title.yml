@@ -41,7 +41,9 @@ jobs:
           # Scopes are optional and free-form, e.g. feat(mcp): …, docs(adr): …
           requireScope: false
           # The subject must not start with an upper-case letter: "add x", not "Add x".
-          subjectPattern: ^(?![A-Z]).+$
+          # Exception: Dependabot always writes "Bump …" with a capital B and can't be configured
+          # otherwise, so that exact word is allowed.
+          subjectPattern: ^(?:(?![A-Z]).+|Bump .+)$
           subjectPatternError: |
             The subject "{subject}" in the PR title "{title}" must start with a lower-case letter,
             for example "feat(mcp): add check_stock tool".
