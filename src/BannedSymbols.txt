@@ -1,0 +1,15 @@
+# Banned APIs for the Domain and Application layers (RS0030 fails the build).
+# Format: documentation comment id;message
+# Time must come from an injected TimeProvider so rules are testable and deterministic.
+P:System.DateTime.Now;Use an injected TimeProvider
+P:System.DateTime.UtcNow;Use an injected TimeProvider
+P:System.DateTime.Today;Use an injected TimeProvider
+P:System.DateTimeOffset.Now;Use an injected TimeProvider
+P:System.DateTimeOffset.UtcNow;Use an injected TimeProvider
+# Randomness must be injected too, so seed data and tests are repeatable.
+M:System.Random.#ctor;Inject a seeded System.Random instead of creating one
+P:System.Random.Shared;Inject a seeded System.Random instead of using the shared instance
+# stdout is the MCP protocol channel in the stdio host; nothing below the host may write to it.
+P:System.Console.Out;Use ILogger, never stdout
+M:System.Console.WriteLine;Use ILogger, never stdout
+M:System.Console.Write(System.String);Use ILogger, never stdout
