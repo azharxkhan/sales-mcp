@@ -19,13 +19,15 @@ The repo also works as a **step-by-step course** on building production-quality 
 ## Architecture
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph clients["MCP clients"]
+        direction LR
         host["MCP host<br/>Claude Desktop, Claude Code, any client<br/><i>Option A, M2–M5</i>"]
         runtime["SalesMcp.AgentRuntime<br/>own agent loop, chat UI, evals<br/><i>Option B, M7–M8</i>"]
     end
 
     subgraph hosts["MCP hosts (agent bound at connection)"]
+        direction LR
         stdio["SalesMcp.Server.Stdio<br/>stdio, --agent id"]
         http["SalesMcp.Server.Http<br/>Streamable HTTP, API key → agent<br/><i>M7</i>"]
     end
