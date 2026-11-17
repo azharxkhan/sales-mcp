@@ -88,6 +88,7 @@ public readonly record struct Money
             ? other
             : throw new InvalidOperationException($"Currency mismatch: {Currency} and {other.Currency}.");
 
-    private static bool IsValidCurrency(string? code) =>
+    /// <summary>True when <paramref name="code"/> is three upper-case letters, the ISO 4217 shape.</summary>
+    public static bool IsValidCurrency(string? code) =>
         code is { Length: 3 } && code.All(c => c is >= 'A' and <= 'Z');
 }
