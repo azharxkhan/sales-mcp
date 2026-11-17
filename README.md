@@ -1,6 +1,6 @@
 # Sales MCP
 
-[![CI](https://github.com/azharxkhan/sales-mcp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/azharxkhan/sales-mcp/actions/workflows/ci.yml)
+[![CI](https://github.com/azharxkhan/sales-mcp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/azharxkhan/sales-mcp/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 An open-source **Model Context Protocol (MCP) server for building B2B sales agents**, written in C#/.NET.
 
@@ -65,4 +65,6 @@ Developed with [Claude Code](https://claude.com/claude-code) as a pair programme
 
 ## License
 
-MIT (to be added in milestone M0).
+[MIT](LICENSE) © 2026 Azhar Khan.
+
+Please report security problems, including guardrail bypasses, privately as described in [SECURITY.md](SECURITY.md). Taking part in the project means following the [Code of Conduct](CODE_OF_CONDUCT.md).

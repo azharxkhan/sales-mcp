@@ -3,3 +3,6 @@ contact_links:
   - name: Project plan
     url: https://github.com/azharxkhan/sales-mcp/blob/main/docs/PLAN.md
     about: Read the plan and milestones before opening an issue.
+  - name: Report a security vulnerability
+    url: https://github.com/azharxkhan/sales-mcp/security/advisories/new
+    about: Report vulnerabilities and guardrail bypasses privately. Please don't open a public issue (see SECURITY.md).
