@@ -37,6 +37,8 @@ Line endings are normalised to LF by `.gitattributes`.
 
 ## Rules
 
+- Follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+- Report security problems and guardrail bypasses privately, as described in [SECURITY.md](SECURITY.md), never in a public issue.
 - No secrets in code or config.
 - No raw third-party files (PDFs, books, reports). Link to the originals from `docs/` instead.
 - AI-assisted work is welcome and labelled: commits carry a `Co-Authored-By` trailer.
