@@ -44,6 +44,12 @@ public sealed record OrderLine(
     Money UnitPrice,
     VatLine Vat)
 {
+    /// <summary>For EF Core only.</summary>
+    private OrderLine()
+        : this(0, default, default, string.Empty, default, default, null!)
+    {
+    }
+
     /// <summary>The line after discount, excluding VAT.</summary>
     public Money Net => Vat.Net;
 
@@ -62,6 +68,14 @@ public sealed record OrderLine(
 public sealed class SalesOrder
 {
     private readonly List<OrderLine> _lines;
+
+#pragma warning disable CS8618 // Non-nullable members are set by EF Core when it loads the entity.
+    /// <summary>For EF Core only.</summary>
+    private SalesOrder()
+    {
+        _lines = [];
+    }
+#pragma warning restore CS8618
 
     private SalesOrder(OrderId id, Quote quote, DateOnly orderedOn, List<OrderLine> lines)
     {

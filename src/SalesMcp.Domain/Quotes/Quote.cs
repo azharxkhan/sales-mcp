@@ -47,7 +47,14 @@ public enum RiskReducer
 public sealed class Quote
 {
     private readonly List<QuoteLine> _lines;
-    private readonly List<RiskReducer> _riskReducers;
+
+#pragma warning disable CS8618 // Non-nullable members are set by EF Core when it loads the entity.
+    /// <summary>For EF Core only.</summary>
+    private Quote()
+    {
+        _lines = [];
+    }
+#pragma warning restore CS8618
 
     private Quote(
         QuoteId id,
@@ -68,7 +75,7 @@ public sealed class Quote
         ValidUntil = validUntil;
         Currency = currency;
         _lines = lines;
-        _riskReducers = riskReducers;
+        RiskReducers = riskReducers;
         Status = QuoteStatus.Issued;
     }
 
@@ -100,7 +107,7 @@ public sealed class Quote
     public IReadOnlyList<QuoteLine> Lines => _lines;
 
     /// <summary>Risk-reducers offered with the quote, without repeats.</summary>
-    public IReadOnlyList<RiskReducer> RiskReducers => _riskReducers;
+    public IReadOnlyList<RiskReducer> RiskReducers { get; private set; }
 
     /// <summary>Net, VAT and total, with VAT shown per code (guardrail E3).</summary>
     public VatSummary Totals => VatSummary.Of(_lines.Select(l => l.Price.Vat), Currency);

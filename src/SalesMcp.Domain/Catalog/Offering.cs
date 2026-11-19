@@ -26,6 +26,13 @@ public enum OfferingKind
 /// </remarks>
 public abstract class Offering
 {
+#pragma warning disable CS8618 // Non-nullable members are set by EF Core when it loads the entity.
+    /// <summary>For EF Core only.</summary>
+    protected Offering()
+    {
+    }
+#pragma warning restore CS8618
+
     /// <summary>Sets the fields every offering has. Inputs must already be validated.</summary>
     protected Offering(OfferingId id, BusinessId businessId, Sku sku, string name, string description, VatCode vatCode)
     {
