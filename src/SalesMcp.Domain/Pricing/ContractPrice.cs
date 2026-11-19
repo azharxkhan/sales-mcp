@@ -8,6 +8,13 @@ namespace SalesMcp.Domain.Pricing;
 /// </summary>
 public sealed class ContractPrice
 {
+#pragma warning disable CS8618 // Non-nullable members are set by EF Core when it loads the entity.
+    /// <summary>For EF Core only.</summary>
+    private ContractPrice()
+    {
+    }
+#pragma warning restore CS8618
+
     private ContractPrice(CustomerId customerId, OfferingId offeringId, Money unitPrice, DateOnly validFrom, DateOnly validTo)
     {
         CustomerId = customerId;

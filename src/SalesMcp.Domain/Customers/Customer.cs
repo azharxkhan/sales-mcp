@@ -11,6 +11,13 @@ namespace SalesMcp.Domain.Customers;
 /// </remarks>
 public sealed class Customer
 {
+#pragma warning disable CS8618 // Non-nullable members are set by EF Core when it loads the entity.
+    /// <summary>For EF Core only.</summary>
+    private Customer()
+    {
+    }
+#pragma warning restore CS8618
+
     private Customer(
         CustomerId id,
         BusinessId businessId,

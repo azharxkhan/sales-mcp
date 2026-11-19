@@ -27,3 +27,8 @@ TestResults/
 *.coverage
 *.trx
 artifacts/
+
+# Local SQLite databases (created on first run; never committed)
+*.db
+*.db-shm
+*.db-wal

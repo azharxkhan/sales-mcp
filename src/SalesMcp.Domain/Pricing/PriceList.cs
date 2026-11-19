@@ -9,7 +9,14 @@ namespace SalesMcp.Domain.Pricing;
 /// <param name="OfferingId">The offering priced.</param>
 /// <param name="MinQuantity">The smallest quantity this price applies to.</param>
 /// <param name="UnitPrice">Price per unit, excluding VAT. Always greater than zero.</param>
-public sealed record PriceListItem(OfferingId OfferingId, Quantity MinQuantity, Money UnitPrice);
+public sealed record PriceListItem(OfferingId OfferingId, Quantity MinQuantity, Money UnitPrice)
+{
+    /// <summary>For EF Core only.</summary>
+    private PriceListItem()
+        : this(default, default, default)
+    {
+    }
+}
 
 /// <summary>
 /// A set of prices in one currency. Each business has a default list (its list prices); a customer
@@ -19,8 +26,9 @@ public sealed class PriceList
 {
     private readonly List<PriceListItem> _items = [];
 
-    private PriceList(PriceListId id, BusinessId businessId, string name, string currency)
+    private PriceList(PriceListId id, BusinessId businessId, string name, string currency, bool isDefault)
     {
+        IsDefault = isDefault;
         Id = id;
         BusinessId = businessId;
         Name = name;
@@ -39,11 +47,24 @@ public sealed class PriceList
     /// <summary>The currency of every price on the list.</summary>
     public string Currency { get; }
 
+    /// <summary>True for the business's default list (its list prices). A business has exactly one.</summary>
+    public bool IsDefault { get; }
+
     /// <summary>The prices, in the order they were added.</summary>
     public IReadOnlyList<PriceListItem> Items => _items;
 
     /// <summary>Validates and creates an empty price list.</summary>
-    public static Result<PriceList> Create(PriceListId id, BusinessId businessId, string? name, string? currency)
+    /// <param name="id">The list's id.</param>
+    /// <param name="businessId">The business whose prices these are.</param>
+    /// <param name="name">Display name.</param>
+    /// <param name="currency">ISO 4217 currency of every price on the list.</param>
+    /// <param name="isDefault">True for the business's default list.</param>
+    public static Result<PriceList> Create(
+        PriceListId id,
+        BusinessId businessId,
+        string? name,
+        string? currency,
+        bool isDefault = false)
     {
         var trimmedName = name?.Trim() ?? string.Empty;
         if (trimmedName.Length == 0)
@@ -57,7 +78,7 @@ public sealed class PriceList
         }
 
         return Money.IsValidCurrency(currency)
-            ? Result.Success(new PriceList(id, businessId, trimmedName, currency!))
+            ? Result.Success(new PriceList(id, businessId, trimmedName, currency!, isDefault))
             : Result.Failure<PriceList>(PricingErrors.CurrencyInvalid);
     }
 

@@ -34,6 +34,13 @@ public enum UnitOfMeasure
 /// <summary>Physical goods, sold from stock (stock levels arrive with the inventory model).</summary>
 public sealed class Product : Offering
 {
+#pragma warning disable CS8618 // Non-nullable members are set by EF Core when it loads the entity.
+    /// <summary>For EF Core only.</summary>
+    private Product()
+    {
+    }
+#pragma warning restore CS8618
+
     private Product(
         OfferingId id,
         BusinessId businessId,

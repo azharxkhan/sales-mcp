@@ -15,6 +15,13 @@ public sealed record PricedOffering(Offering Offering, PriceBreakdown Price);
 /// </summary>
 public sealed class QuoteLine
 {
+#pragma warning disable CS8618 // Non-nullable members are set by EF Core when it loads the entity.
+    /// <summary>For EF Core only.</summary>
+    private QuoteLine()
+    {
+    }
+#pragma warning restore CS8618
+
     internal QuoteLine(int lineNumber, Offering offering, PriceBreakdown price)
     {
         LineNumber = lineNumber;

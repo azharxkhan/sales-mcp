@@ -1,0 +1,47 @@
+using SalesMcp.Domain.Catalog;
+using SalesMcp.Domain.Common;
+using SalesMcp.Domain.Customers;
+using SalesMcp.Domain.Inventory;
+using SalesMcp.Domain.Pricing;
+
+namespace SalesMcp.Application.Persistence;
+
+/// <summary>Reads the catalog. Narrow on purpose: tools ask for exactly what they need.</summary>
+public interface ICatalogReader
+{
+    /// <summary>The offering with this id, or null.</summary>
+    Task<Offering?> GetOfferingAsync(OfferingId id, CancellationToken cancellationToken);
+
+    /// <summary>The business's active offerings, ordered by SKU.</summary>
+    Task<IReadOnlyList<Offering>> ListActiveOfferingsAsync(BusinessId businessId, CancellationToken cancellationToken);
+
+    /// <summary>Every configuration rule that starts at one of the business's offerings.</summary>
+    Task<OfferingRuleSet> GetRulesAsync(BusinessId businessId, CancellationToken cancellationToken);
+}
+
+/// <summary>Reads customers and their contacts.</summary>
+public interface ICustomerReader
+{
+    /// <summary>The customer with this id, or null.</summary>
+    Task<Customer?> GetCustomerAsync(CustomerId id, CancellationToken cancellationToken);
+
+    /// <summary>The customer's contacts, ordered by name.</summary>
+    Task<IReadOnlyList<Contact>> ListContactsAsync(CustomerId customerId, CancellationToken cancellationToken);
+}
+
+/// <summary>Loads what the price resolver needs for one customer.</summary>
+public interface IPricingReader
+{
+    /// <summary>
+    /// The business's default list, the customer's own list (if any) and the customer's contract prices.
+    /// Null when the business has no default list.
+    /// </summary>
+    Task<PriceSources?> GetPriceSourcesAsync(Customer customer, CancellationToken cancellationToken);
+}
+
+/// <summary>Reads stock levels.</summary>
+public interface IStockReader
+{
+    /// <summary>Stock for the offering in every warehouse that holds a record for it.</summary>
+    Task<IReadOnlyList<StockLevel>> GetStockAsync(OfferingId offeringId, CancellationToken cancellationToken);
+}

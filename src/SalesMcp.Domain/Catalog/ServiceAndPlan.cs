@@ -35,6 +35,13 @@ public enum BillingPeriod
 /// </summary>
 public sealed class Service : Offering
 {
+#pragma warning disable CS8618 // Non-nullable members are set by EF Core when it loads the entity.
+    /// <summary>For EF Core only.</summary>
+    private Service()
+    {
+    }
+#pragma warning restore CS8618
+
     private Service(OfferingId id, BusinessId businessId, CommonFields common, VatCode vatCode, ServicePricingModel pricingModel)
         : base(id, businessId, common.Sku, common.Name, common.Description, vatCode) => PricingModel = pricingModel;
 
@@ -64,6 +71,13 @@ public sealed class Service : Offering
 /// </summary>
 public sealed class Plan : Offering
 {
+#pragma warning disable CS8618 // Non-nullable members are set by EF Core when it loads the entity.
+    /// <summary>For EF Core only.</summary>
+    private Plan()
+    {
+    }
+#pragma warning restore CS8618
+
     private Plan(OfferingId id, BusinessId businessId, CommonFields common, VatCode vatCode, BillingPeriod billingPeriod)
         : base(id, businessId, common.Sku, common.Name, common.Description, vatCode) => BillingPeriod = billingPeriod;
 
