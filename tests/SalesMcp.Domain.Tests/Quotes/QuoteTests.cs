@@ -74,6 +74,27 @@ public abstract class QuoteFixture
 public class QuoteTests : QuoteFixture
 {
     [Fact]
+    public void Can_be_declined_once_while_open()
+    {
+        var quote = NewQuote([Priced(Bearing, 1)]).Value;
+
+        Assert.True(quote.Decline().IsSuccess);
+        Assert.Equal(QuoteStatus.Declined, quote.Status);
+        Assert.Equal(QuoteErrors.NotOpen, quote.Decline().Error);
+        Assert.Equal(QuoteErrors.NotOpen, quote.CanBeAccepted(Today).Error);
+    }
+
+    [Fact]
+    public void Cannot_be_declined_once_accepted()
+    {
+        var quote = NewQuote([Priced(Bearing, 1)]).Value;
+        SalesOrder.FromQuote(OrderId.New(), quote, Today);
+
+        Assert.Equal(QuoteErrors.NotOpen, quote.Decline().Error);
+        Assert.Equal(QuoteStatus.Accepted, quote.Status);
+    }
+
+    [Fact]
     public void Issues_a_quote_valid_for_30_days_by_default()
     {
         var quote = NewQuote([Priced(Bearing, 2)]).Value;
@@ -287,6 +308,32 @@ public class SalesOrderTests : QuoteFixture
     [Fact]
     public void Rejects_a_null_quote() =>
         Assert.Throws<ArgumentNullException>(() => SalesOrder.FromQuote(OrderId.New(), null!, Today));
+
+    [Fact]
+    public void Moves_forward_from_draft_to_invoiced()
+    {
+        var order = SalesOrder.FromQuote(OrderId.New(), NewQuote([Priced(Bearing, 1)]).Value, Today).Value;
+
+        Assert.True(order.Release().IsSuccess);
+        Assert.Equal(OrderStatus.Released, order.Status);
+        Assert.True(order.Ship().IsSuccess);
+        Assert.Equal(OrderStatus.Shipped, order.Status);
+        Assert.True(order.Invoice().IsSuccess);
+        Assert.Equal(OrderStatus.Invoiced, order.Status);
+    }
+
+    [Fact]
+    public void Refuses_to_skip_or_repeat_a_step()
+    {
+        var order = SalesOrder.FromQuote(OrderId.New(), NewQuote([Priced(Bearing, 1)]).Value, Today).Value;
+
+        Assert.Equal(OrderErrors.StatusInvalidCode, order.Ship().Error.Code);
+        Assert.Equal(OrderErrors.StatusInvalidCode, order.Invoice().Error.Code);
+        Assert.Equal(OrderStatus.Draft, order.Status);
+
+        order.Release();
+        Assert.Equal(OrderErrors.StatusInvalid(OrderStatus.Released, OrderStatus.Released), order.Release().Error);
+    }
 }
 
 public class QuoteNumberTests
