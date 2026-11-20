@@ -5,7 +5,7 @@ using SalesMcp.Domain.Tax;
 
 namespace SalesMcp.Domain.Orders;
 
-/// <summary>Where an order is in fulfilment. Transitions arrive in M4; M1 orders start as drafts.</summary>
+/// <summary>Where an order is in fulfilment. Orders move forward one step at a time.</summary>
 public enum OrderStatus
 {
     /// <summary>Created from a quote, not yet released (credit and stock checks come at release).</summary>
@@ -108,7 +108,7 @@ public sealed class SalesOrder
     public string Currency { get; }
 
     /// <summary>Where it is in fulfilment.</summary>
-    public OrderStatus Status { get; }
+    public OrderStatus Status { get; private set; }
 
     /// <summary>The lines, numbered as on the quote.</summary>
     public IReadOnlyList<OrderLine> Lines => _lines;
@@ -139,5 +139,26 @@ public sealed class SalesOrder
 
         quote.MarkAccepted();
         return Result.Success(new SalesOrder(id, quote, today, lines));
+    }
+
+    /// <summary>Releases a draft order for fulfilment.</summary>
+    /// <remarks>M4 adds the credit check and stock allocation that run at release.</remarks>
+    public Result Release() => Advance(OrderStatus.Draft, OrderStatus.Released);
+
+    /// <summary>Records that every line of a released order has shipped.</summary>
+    public Result Ship() => Advance(OrderStatus.Released, OrderStatus.Shipped);
+
+    /// <summary>Records that a shipped order has been invoiced.</summary>
+    public Result Invoice() => Advance(OrderStatus.Shipped, OrderStatus.Invoiced);
+
+    private Result Advance(OrderStatus from, OrderStatus to)
+    {
+        if (Status != from)
+        {
+            return Result.Failure(OrderErrors.StatusInvalid(Status, to));
+        }
+
+        Status = to;
+        return Result.Success();
     }
 }
