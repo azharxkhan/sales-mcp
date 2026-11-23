@@ -17,4 +17,13 @@ public class LayeringTests
 
         Assert.All(salesMcpReferences, name => Assert.Equal("SalesMcp.Domain", name));
     }
+
+    [Fact]
+    public void Application_does_not_reference_EF_Core()
+    {
+        // Use cases see the store through the interfaces in Persistence/, never through DbContext.
+        var references = typeof(AssemblyMarker).Assembly.GetReferencedAssemblies().Select(a => a.Name!);
+
+        Assert.DoesNotContain(references, name => name.StartsWith("Microsoft.EntityFrameworkCore", StringComparison.Ordinal));
+    }
 }
