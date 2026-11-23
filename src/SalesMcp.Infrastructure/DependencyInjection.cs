@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SalesMcp.Application.Persistence;
 using SalesMcp.Infrastructure.Persistence;
+using SalesMcp.Infrastructure.Seeding;
 
 namespace SalesMcp.Infrastructure;
 
@@ -10,7 +11,7 @@ public static class DependencyInjection
 {
     /// <summary>
     /// Adds the SQLite <see cref="SalesDbContext"/> and the Application persistence interfaces.
-    /// All are scoped: one context per tool call.
+    /// All are scoped: one context per tool call. Also adds <see cref="AcmeSeeder"/>.
     /// </summary>
     /// <param name="services">The host's services.</param>
     /// <param name="connectionString">A SQLite connection string, for example <c>Data Source=sales.db</c>.</param>
@@ -31,6 +32,8 @@ public static class DependencyInjection
         services.AddScoped<IQuoteRepository>(sp => sp.GetRequiredService<SalesDocuments>());
         services.AddScoped<IOrderRepository>(sp => sp.GetRequiredService<SalesDocuments>());
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<SalesDocuments>());
+
+        services.AddScoped<AcmeSeeder>();
 
         return services;
     }

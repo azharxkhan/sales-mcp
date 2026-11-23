@@ -183,6 +183,18 @@ public sealed class Quote
         return IsExpired(today) ? Result.Failure(QuoteErrors.Expired) : Result.Success();
     }
 
+    /// <summary>Records that the buyer turned the quote down. Only an open quote can be declined.</summary>
+    public Result Decline()
+    {
+        if (Status != QuoteStatus.Issued)
+        {
+            return Result.Failure(QuoteErrors.NotOpen);
+        }
+
+        Status = QuoteStatus.Declined;
+        return Result.Success();
+    }
+
     /// <summary>Marks the quote accepted. Only called when it becomes an order.</summary>
     internal void MarkAccepted() => Status = QuoteStatus.Accepted;
 
