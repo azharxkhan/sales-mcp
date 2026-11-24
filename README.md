@@ -10,7 +10,7 @@ Configure an agent (**what** it sells: products, services or subscriptions; **ho
 
 The repo also works as a **step-by-step course** on building production-quality MCP servers, AI agents (including evaluating them in CI) and the DevOps around them.
 
-> **Status: M0 Foundation, nearly done.** Quality gates, CI, security scanning and the decision records are in place. There's nothing to run yet: the first runnable version is **v0.1.0** (M2). See the [roadmap](#roadmap).
+> **Status: M1 Domain & data done; M2 next.** The sales domain (offerings, customers, pricing with VAT, stock, quotes and orders) is built and tested against SQLite, with realistic Acme Distributors demo data. There's no MCP server to run yet: the first runnable version is **v0.1.0** (M2). See the [roadmap](#roadmap).
 
 ## Quick start
 
@@ -66,8 +66,8 @@ The guardrails that matter are designed in, not prompted:
 
 | Milestone | Release | Scope | Status |
 |---|---|---|---|
-| [M0: Foundation](https://github.com/azharxkhan/sales-mcp/milestone/1) | — | Scaffold, quality gates, CI, security scanning, ADRs, community files | 🔄 In progress |
-| [M1: Domain & data](https://github.com/azharxkhan/sales-mcp/milestone/2) | — | Offerings, customers, price resolver with VAT, stock, quotes and orders, Acme Distributors seed data | ⏳ Planned |
+| [M0: Foundation](https://github.com/azharxkhan/sales-mcp/milestone/1) | — | Scaffold, quality gates, CI, security scanning, ADRs, community files | ✅ Done |
+| [M1: Domain & data](https://github.com/azharxkhan/sales-mcp/milestone/2) | — | Offerings, customers, price resolver with VAT, stock, quotes and orders, Acme Distributors seed data | ✅ Done |
 | [M2: First MCP tools](https://github.com/azharxkhan/sales-mcp/milestone/3) | v0.1.0 | Stdio host; catalog, customer, stock, price, quote and order-status tools; integration test harness | ⏳ Planned |
 | [M3: Agents & playbooks](https://github.com/azharxkhan/sales-mcp/milestone/4) | v0.2.0 | YAML agents and playbooks with JSON Schema, `--agent` binding, `qualify`, `recommend`, SPIN and JOLT playbooks | ⏳ Planned |
 | [M4: Orders & guardrails](https://github.com/azharxkhan/sales-mcp/milestone/5) | v0.3.0 | Quote → order with buyer confirmation, credit holds, back-orders, discount tiers, human handoff, audit log, kill switch | ⏳ Planned |
@@ -93,7 +93,7 @@ dotnet test --solution SalesMcp.slnx
 |---|---|
 | `src/SalesMcp.Domain` | Entities and business rules. No dependencies |
 | `src/SalesMcp.Application` | Use cases, guardrail and playbook enforcement. Depends on Domain only |
-| `src/SalesMcp.Infrastructure` | EF Core, seeding, YAML agent/playbook loading |
+| `src/SalesMcp.Infrastructure` | EF Core and SQLite, Acme seed data; YAML agent/playbook loading (M3) |
 | `src/SalesMcp.Server.Stdio` | MCP host over stdio (M2) |
 | `tests/*` | xUnit v3 on Microsoft.Testing.Platform. Layering is enforced by architecture tests |
 
@@ -102,6 +102,8 @@ dotnet test --solution SalesMcp.slnx
 | Document | What's in it |
 |---|---|
 | [Project plan](docs/PLAN.md) | Vision, decisions (ADRs), agent profiles and playbooks, domain model, MCP surface, architecture, evals, DevOps, milestones |
+| [Course](docs/course/README.md) | Chapters written alongside the code. Chapters 3 (modelling a sales domain) and 4 (persistence) are drafted |
+| [Domain glossary](docs/domain/glossary.md) | Quote, order, hold, back-order, allocation, credit exposure, ATP and the pricing terms, linked to the code |
 | [Architecture decisions](docs/adr/README.md) | ADR-0001 to ADR-0016: stack, architecture, transports, agent design and the guardrail core, each with context, trade-offs and alternatives |
 | [State of sales 2026](docs/research/sales-landscape-2026.md) | Trends, then vs now, how selling evolved, reading list |
 | [AI in sales 2023–2026](docs/research/ai-in-sales-2023-2026.md) | What AI was used for, what worked, quarter-by-quarter timeline, buyer complaints |
