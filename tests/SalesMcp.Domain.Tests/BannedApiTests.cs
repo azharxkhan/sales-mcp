@@ -1,7 +1,7 @@
 namespace SalesMcp.Domain.Tests;
 
 /// <summary>
-/// Checks that the banned-API list (src/BannedSymbols.txt) is wired into the inner layers,
+/// Checks that the banned-API list (src/BannedSymbols.txt) is wired into every src project,
 /// so reading the clock, creating an unseeded Random or writing to stdout fails the build.
 /// </summary>
 public class BannedApiTests
@@ -9,7 +9,9 @@ public class BannedApiTests
     [Theory]
     [InlineData("SalesMcp.Domain")]
     [InlineData("SalesMcp.Application")]
-    public void Inner_layers_reference_the_banned_api_list(string project)
+    [InlineData("SalesMcp.Infrastructure")]
+    [InlineData("SalesMcp.Server.Stdio")]
+    public void Every_src_project_references_the_banned_api_list(string project)
     {
         var root = FindRepoRoot();
         var csproj = File.ReadAllText(Path.Combine(root, "src", project, project + ".csproj"));
@@ -23,7 +25,7 @@ public class BannedApiTests
     [InlineData("P:System.DateTime.UtcNow")]
     [InlineData("P:System.DateTimeOffset.UtcNow")]
     [InlineData("M:System.Random.#ctor")]
-    [InlineData("M:System.Console.WriteLine")]
+    [InlineData("T:System.Console")]
     public void Banned_list_contains(string symbol)
     {
         var banned = File.ReadAllLines(Path.Combine(FindRepoRoot(), "src", "BannedSymbols.txt"));
