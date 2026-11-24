@@ -47,6 +47,14 @@ internal sealed class SalesReader(SalesDbContext db) : ICatalogReader, ICustomer
     public Task<Customer?> GetCustomerAsync(CustomerId id, CancellationToken cancellationToken) =>
         db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
+    public async Task<IReadOnlyList<Customer>> FindByAccountNumberAsync(AccountNumber accountNumber, CancellationToken cancellationToken) =>
+        await db.Customers.AsNoTracking()
+            .Where(c => c.AccountNumber == accountNumber)
+            .OrderBy(c => c.BusinessId)
+            .Take(2)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
     public async Task<IReadOnlyList<Contact>> ListContactsAsync(CustomerId customerId, CancellationToken cancellationToken) =>
         await db.Contacts.AsNoTracking()
             .Where(c => c.CustomerId == customerId)

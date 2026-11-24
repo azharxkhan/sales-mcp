@@ -141,6 +141,23 @@ public sealed class AcmeSeederTests(SeededAcmeDatabase seeded) : IClassFixture<S
         });
     }
 
+    [Fact]
+    public async Task Finds_a_customer_by_account_number()
+    {
+        var top = _expected.Customers.Single(c => c.Id == _fixtures.Customers.Top);
+
+        var (found, missing) = await _database.InScopeAsync(async sp =>
+        {
+            var customers = sp.GetRequiredService<ICustomerReader>();
+            return (
+                await customers.FindByAccountNumberAsync(top.AccountNumber, Ct),
+                await customers.FindByAccountNumberAsync(Domain.Customers.AccountNumber.Create("XYZ-999").Value, Ct));
+        });
+
+        Assert.Equal(top.Id, Assert.Single(found).Id);
+        Assert.Empty(missing);
+    }
+
     private static void AssertSameTotals(VatSummary expected, VatSummary actual)
     {
         Assert.Equal(expected.Net, actual.Net);

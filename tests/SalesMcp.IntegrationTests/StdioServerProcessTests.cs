@@ -16,6 +16,8 @@ public sealed class StdioServerProcessTests : IDisposable
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    private static readonly string _customer = ServerHostTests.TopCustomer().AccountNumber.Value;
+
     private string DatabasePath => Path.Combine(_folder, "sales.db");
 
     public void Dispose()
@@ -30,19 +32,7 @@ public sealed class StdioServerProcessTests : IDisposable
     [Fact]
     public async Task Stdout_carries_only_json_rpc_messages()
     {
-        var start = new ProcessStartInfo("dotnet")
-        {
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-        };
-        foreach (var arg in new[] { _server, "--database", DatabasePath })
-        {
-            start.ArgumentList.Add(arg);
-        }
-
-        using var process = Process.Start(start)!;
+        using var process = StartServer("--customer", _customer);
         var stderr = process.StandardError.ReadToEndAsync(Ct);
 
         await process.StandardInput.WriteLineAsync("""{"jsonrpc":"2.0","id":1,"method":"ping"}""".AsMemory(), Ct);
@@ -79,7 +69,7 @@ public sealed class StdioServerProcessTests : IDisposable
         {
             Name = "sales-mcp",
             Command = "dotnet",
-            Arguments = [_server, "--database", DatabasePath],
+            Arguments = [_server, "--database", DatabasePath, "--customer", _customer],
         });
 
         // Connecting runs discovery, which replaced the initialize handshake in spec 2026-07-28.
@@ -93,5 +83,38 @@ public sealed class StdioServerProcessTests : IDisposable
 
         // No tools are registered yet, so the server doesn't offer tools/list. The first tool (#68) adds it.
         Assert.Null(client.ServerCapabilities?.Tools);
+    }
+
+    [Fact]
+    public async Task An_unknown_customer_stops_the_server_with_a_message_on_stderr()
+    {
+        using var process = StartServer("--customer", "XYZ-999");
+        var stdout = process.StandardOutput.ReadToEndAsync(Ct);
+        var stderr = process.StandardError.ReadToEndAsync(Ct);
+
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        timeout.CancelAfter(TimeSpan.FromSeconds(60));
+        await process.WaitForExitAsync(timeout.Token);
+
+        Assert.Equal(2, process.ExitCode);
+        Assert.Contains("No customer has account number XYZ-999", await stderr, StringComparison.Ordinal);
+        Assert.Equal(string.Empty, await stdout);
+    }
+
+    private Process StartServer(params string[] args)
+    {
+        var start = new ProcessStartInfo("dotnet")
+        {
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        foreach (var arg in new[] { _server, "--database", DatabasePath }.Concat(args))
+        {
+            start.ArgumentList.Add(arg);
+        }
+
+        return Process.Start(start)!;
     }
 }

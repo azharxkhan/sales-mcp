@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
+using SalesMcp.Application.Session;
 using SalesMcp.Infrastructure;
 using SalesMcp.Infrastructure.Persistence;
 
@@ -13,7 +14,7 @@ namespace SalesMcp.Server.Stdio;
 /// Composes the stdio MCP server. Kept apart from <c>Program</c> so the integration tests can build
 /// the same composition the executable runs.
 /// </summary>
-public static class SalesMcpHost
+public static partial class SalesMcpHost
 {
     /// <summary>The name the server reports to MCP clients.</summary>
     public const string ServerName = "sales-mcp";
@@ -24,6 +25,7 @@ public static class SalesMcpHost
     private static readonly Dictionary<string, string> _switches = new(StringComparer.OrdinalIgnoreCase)
     {
         ["--database"] = ServerSettings.DatabasePathKey,
+        ["--customer"] = ServerSettings.CustomerKey,
     };
 
     /// <summary>The server's version, from the assembly's informational version.</summary>
@@ -59,6 +61,11 @@ public static class SalesMcpHost
         builder.Services.AddSingleton(settings);
         builder.Services.AddSalesInfrastructure(settings.ConnectionString);
 
+        // One stdio process serves one session, so the session context is a singleton.
+        builder.Services.AddSingleton<SessionContext>();
+        builder.Services.AddSingleton<ISessionContext>(sp => sp.GetRequiredService<SessionContext>());
+        builder.Services.AddScoped<SessionBinder>();
+
         builder.Services
             .AddMcpServer(options => options.ServerInfo = new Implementation { Name = ServerName, Version = Version })
             .WithStdioServerTransport()
@@ -82,4 +89,41 @@ public static class SalesMcpHost
         await using var scope = services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<DatabaseInitializer>().InitializeAsync(cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// Binds the session to the configured customer. Call it after <see cref="InitializeDatabaseAsync"/>
+    /// and before the host starts, so no tool can run unbound.
+    /// </summary>
+    /// <returns>
+    /// <see langword="true"/> if the session is bound; <see langword="false"/> if not, after logging
+    /// why to stderr. The server should then exit.
+    /// </returns>
+    public static async Task<bool> BindSessionAsync(IServiceProvider services, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        var settings = services.GetRequiredService<ServerSettings>();
+        var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(SalesMcpHost).FullName!);
+
+        await using var scope = services.CreateAsyncScope();
+        var result = await scope.ServiceProvider.GetRequiredService<SessionBinder>()
+            .ResolveAsync(settings.CustomerAccount, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (result.IsFailure)
+        {
+            LogBindFailed(logger, result.Error.Code, result.Error.Message);
+            return false;
+        }
+
+        services.GetRequiredService<SessionContext>().Bind(result.Value);
+        LogBound(logger, result.Value.AccountNumber.Value);
+        return true;
+    }
+
+    [LoggerMessage(Level = LogLevel.Critical, Message = "The server can't start. {Code}: {Message}")]
+    private static partial void LogBindFailed(ILogger logger, string code, string message);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Session bound to customer {AccountNumber}.")]
+    private static partial void LogBound(ILogger logger, string accountNumber);
 }
