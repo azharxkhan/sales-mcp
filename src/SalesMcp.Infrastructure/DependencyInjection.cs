@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using SalesMcp.Application.Persistence;
 using SalesMcp.Infrastructure.Persistence;
 using SalesMcp.Infrastructure.Seeding;
@@ -34,6 +35,8 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<SalesDocuments>());
 
         services.AddScoped<AcmeSeeder>();
+        services.AddScoped<DatabaseInitializer>();
+        services.TryAddSingleton(TimeProvider.System);
 
         return services;
     }

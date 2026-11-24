@@ -14,7 +14,7 @@ public sealed partial class CourseDocsTests
     public static TheoryData<string> Documents()
     {
         var data = new TheoryData<string>();
-        foreach (var folder in new[] { "docs/course", "docs/domain" })
+        foreach (var folder in new[] { "docs/course", "docs/domain", "docs/mcp" })
         {
             foreach (var file in Directory.EnumerateFiles(Path.Combine(_root, folder), "*.md").Order(StringComparer.Ordinal))
             {

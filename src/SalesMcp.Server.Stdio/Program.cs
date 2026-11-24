@@ -1,8 +1,11 @@
-// SalesMcp.Server.Stdio: MCP host over stdio.
+// SalesMcp.Server.Stdio: the MCP server over stdio.
 //
-// The MCP server (tools, resources, prompts, agent binding via --agent) is built in
-// milestone M2 (see docs/PLAN.md §9). For stdio servers, stdout is reserved for
-// protocol messages, so anything human-readable must go to stderr.
+// stdout is reserved for protocol messages. Logs go to stderr, and the banned-API analyzer fails the
+// build if code in this project or the layers below writes to Console.Out.
 
-Console.Error.WriteLine("SalesMcp stdio server: not implemented yet (milestone M2).");
-return 0;
+using Microsoft.Extensions.Hosting;
+using SalesMcp.Server.Stdio;
+
+using var host = SalesMcpHost.CreateBuilder(args).Build();
+await SalesMcpHost.InitializeDatabaseAsync(host.Services);
+await host.RunAsync();
