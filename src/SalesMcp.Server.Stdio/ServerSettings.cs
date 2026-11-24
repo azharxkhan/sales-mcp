@@ -4,10 +4,17 @@ namespace SalesMcp.Server.Stdio;
 
 /// <summary>Settings read from configuration at start-up.</summary>
 /// <param name="DatabasePath">Absolute path of the SQLite database file.</param>
-public sealed record ServerSettings(string DatabasePath)
+/// <param name="CustomerAccount">The account number of the customer to bind the session to, if given.</param>
+public sealed record ServerSettings(string DatabasePath, string? CustomerAccount)
 {
     /// <summary>The configuration key for the database path.</summary>
     public const string DatabasePathKey = "Database:Path";
+
+    /// <summary>
+    /// The configuration key for the session's customer: <c>--customer</c> on the command line or
+    /// <c>SALESMCP_CUSTOMER</c> in the environment. Temporary until agent profiles bind it in M3.
+    /// </summary>
+    public const string CustomerKey = "Customer";
 
     /// <summary>
     /// Reads the settings. The database defaults to a per-user data folder, because MCP hosts launch
@@ -19,7 +26,8 @@ public sealed record ServerSettings(string DatabasePath)
 
         var configured = configuration[DatabasePathKey];
         var path = string.IsNullOrWhiteSpace(configured) ? DefaultDatabasePath() : Path.GetFullPath(configured);
-        return new ServerSettings(path);
+        var customer = configuration[CustomerKey];
+        return new ServerSettings(path, string.IsNullOrWhiteSpace(customer) ? null : customer.Trim());
     }
 
     /// <summary>The SQLite connection string for <see cref="DatabasePath"/>.</summary>

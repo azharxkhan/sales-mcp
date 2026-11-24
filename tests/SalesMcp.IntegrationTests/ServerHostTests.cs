@@ -2,12 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Server;
+using SalesMcp.Application.Session;
 using SalesMcp.Infrastructure.Persistence;
+using SalesMcp.Infrastructure.Seeding;
 using SalesMcp.Server.Stdio;
 
 namespace SalesMcp.IntegrationTests;
 
-/// <summary>The stdio host's composition: settings, server identity and first-run database set-up.</summary>
+/// <summary>The stdio host's composition: settings, server identity, first-run database set-up and session binding.</summary>
 public sealed class ServerHostTests : IDisposable
 {
     private readonly string _folder = Path.Combine(Path.GetTempPath(), "sales-mcp-tests", Guid.NewGuid().ToString("N"));
@@ -77,6 +79,60 @@ public sealed class ServerHostTests : IDisposable
         Assert.Equal(first, await CountsAsync(host.Services));
         await using var scope = host.Services.CreateAsyncScope();
         Assert.Empty(await scope.ServiceProvider.GetRequiredService<SalesDbContext>().Database.GetPendingMigrationsAsync(Ct));
+    }
+
+    [Theory]
+    [InlineData("--customer")]
+    [InlineData("--Customer")]
+    public void The_command_line_names_the_customer(string option) =>
+        Assert.Equal("KES-001", Settings([option, " KES-001 "]).CustomerAccount);
+
+    [Fact]
+    public void No_customer_is_configured_by_default() => Assert.Null(Settings([]).CustomerAccount);
+
+    [Fact]
+    public async Task Binds_the_session_to_the_configured_customer()
+    {
+        var top = TopCustomer();
+        using var host = await StartedHostAsync("--customer", top.AccountNumber.Value.ToLowerInvariant());
+
+        Assert.True(await SalesMcpHost.BindSessionAsync(host.Services, Ct));
+
+        var session = host.Services.GetRequiredService<ISessionContext>();
+        Assert.Equal(top.Id, session.CustomerId);
+        Assert.Equal(top.BusinessId, session.BusinessId);
+        Assert.Equal(top.AccountNumber, session.AccountNumber);
+        Assert.Same(session, host.Services.GetRequiredService<SessionContext>());
+    }
+
+    [Theory]
+    [InlineData("XYZ-999")]
+    [InlineData(null)]
+    public async Task An_unknown_or_missing_customer_leaves_the_session_unbound(string? account)
+    {
+        using var host = await StartedHostAsync(account is null ? [] : ["--customer", account]);
+
+        Assert.False(await SalesMcpHost.BindSessionAsync(host.Services, Ct));
+        Assert.False(host.Services.GetRequiredService<SessionContext>().IsBound);
+    }
+
+    [Fact]
+    public async Task The_session_cannot_be_bound_twice()
+    {
+        using var host = await StartedHostAsync("--customer", TopCustomer().AccountNumber.Value);
+        Assert.True(await SalesMcpHost.BindSessionAsync(host.Services, Ct));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => SalesMcpHost.BindSessionAsync(host.Services, Ct));
+    }
+
+    internal static Domain.Customers.Customer TopCustomer() =>
+        AcmeSeed.Build(new DateOnly(2026, 11, 19)).Customers.Single(c => c.Id == AcmeSeed.Manifest.Customers.Top);
+
+    private async Task<Microsoft.Extensions.Hosting.IHost> StartedHostAsync(params string[] args)
+    {
+        var host = SalesMcpHost.CreateBuilder(["--database", Path.Combine(_folder, "sales.db"), .. args]).Build();
+        await SalesMcpHost.InitializeDatabaseAsync(host.Services, Ct);
+        return host;
     }
 
     private static ServerSettings Settings(string[] args)

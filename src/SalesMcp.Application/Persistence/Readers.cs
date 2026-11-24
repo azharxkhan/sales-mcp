@@ -27,6 +27,13 @@ public interface ICustomerReader
 
     /// <summary>The customer's contacts, ordered by name.</summary>
     Task<IReadOnlyList<Contact>> ListContactsAsync(CustomerId customerId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Customers with this account number, in any business, at most two: enough to tell a unique match
+    /// from an ambiguous one. Account numbers are unique within a business, so two matches means two
+    /// businesses use the same number.
+    /// </summary>
+    Task<IReadOnlyList<Customer>> FindByAccountNumberAsync(AccountNumber accountNumber, CancellationToken cancellationToken);
 }
 
 /// <summary>Loads what the price resolver needs for one customer.</summary>
