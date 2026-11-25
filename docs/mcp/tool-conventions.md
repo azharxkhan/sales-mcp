@@ -26,7 +26,7 @@ Guardrail ids (A1, D4 and so on) refer to [guardrails.md §4](../research/guardr
 | **Paging and caps** | Lists take `limit` (default 10, maximum 50) and return `nextCursor`. Payloads are size-capped |
 | **Annotations** | Set the SDK's tool annotations on `[McpServerTool]`: `ReadOnly = true` on read-only tools; `Destructive` and `Idempotent` on mutating ones; `OpenWorld = false` everywhere, because tools only touch our own data. Hosts use them to decide when to ask the user |
 | **stdout is the protocol** | Nothing in `src` may write to the console. The banned-API list bans `System.Console`, so a stray write fails the build. Log with `ILogger`; in the stdio host every log line goes to stderr |
-| **Tests** | Every tool gets tests through the MCP client harness: the happy path, each rule failure by code, input validation, and at least one test that tries to break its guardrail |
+| **Tests** | Every tool gets tests through the [MCP client harness](../../tests/SalesMcp.IntegrationTests/Harness/McpServerFixture.cs) (`CallToolAsync<T>`, `ExpectToolErrorAsync`, `ReadResourceAsync`): the happy path, each rule failure by code, input validation, and at least one test that tries to break its guardrail. Add the tool's name to `ToolSurfaceTests` |
 
 ## A tool, in outline
 

@@ -34,13 +34,23 @@ public static partial class SalesMcpHost
         ?? "0.0.0";
 
     /// <summary>
-    /// Creates a host builder with configuration, stderr-only logging, the sales services and the MCP
-    /// server on the stdio transport.
+    /// Creates a host builder with configuration, stderr-only logging, the session, the sales services
+    /// and the MCP server on the stdio transport.
     /// </summary>
     /// <param name="args">Command-line arguments, for example <c>--database ./sales.db</c>.</param>
-    public static HostApplicationBuilder CreateBuilder(string[] args)
+    public static HostApplicationBuilder CreateBuilder(string[] args) =>
+        CreateBuilder(args, server => server.WithStdioServerTransport());
+
+    /// <summary>
+    /// Creates the same host with a different transport. The integration tests use this to run the
+    /// real composition over in-memory streams.
+    /// </summary>
+    /// <param name="args">Command-line arguments.</param>
+    /// <param name="transport">Adds the transport, for example <c>WithStreamServerTransport</c>.</param>
+    public static HostApplicationBuilder CreateBuilder(string[] args, Action<IMcpServerBuilder> transport)
     {
         ArgumentNullException.ThrowIfNull(args);
+        ArgumentNullException.ThrowIfNull(transport);
 
         // Read appsettings.json from next to the executable, not from wherever the host launched us.
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
@@ -66,11 +76,11 @@ public static partial class SalesMcpHost
         builder.Services.AddSingleton<ISessionContext>(sp => sp.GetRequiredService<SessionContext>());
         builder.Services.AddScoped<SessionBinder>();
 
-        builder.Services
+        var server = builder.Services
             .AddMcpServer(options => options.ServerInfo = new Implementation { Name = ServerName, Version = Version })
-            .WithStdioServerTransport()
             .WithToolsFromAssembly(typeof(SalesMcpHost).Assembly)
             .WithResourcesFromAssembly(typeof(SalesMcpHost).Assembly);
+        transport(server);
 
         return builder;
     }
