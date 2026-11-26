@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using SalesMcp.Application.Catalog;
+using SalesMcp.Application.Customers;
 using SalesMcp.Application.Session;
 using SalesMcp.Infrastructure;
 using SalesMcp.Infrastructure.Persistence;
@@ -79,6 +80,8 @@ public static partial class SalesMcpHost
 
         // Application use cases, one per tool.
         builder.Services.AddScoped<SearchCatalog>();
+        builder.Services.AddScoped<GetCustomer>();
+        builder.Services.AddScoped<GetCustomerCredit>();
 
         var server = builder.Services
             .AddMcpServer(options => options.ServerInfo = new Implementation { Name = ServerName, Version = Version })
