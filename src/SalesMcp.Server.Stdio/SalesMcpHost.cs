@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using SalesMcp.Application.Catalog;
 using SalesMcp.Application.Customers;
+using SalesMcp.Application.Inventory;
 using SalesMcp.Application.Session;
 using SalesMcp.Infrastructure;
 using SalesMcp.Infrastructure.Persistence;
@@ -79,7 +80,9 @@ public static partial class SalesMcpHost
         builder.Services.AddScoped<SessionBinder>();
 
         // Application use cases, one per tool.
+        builder.Services.AddScoped<OfferingLookup>();
         builder.Services.AddScoped<SearchCatalog>();
+        builder.Services.AddScoped<CheckStock>();
         builder.Services.AddScoped<GetCustomer>();
         builder.Services.AddScoped<GetCustomerCredit>();
 

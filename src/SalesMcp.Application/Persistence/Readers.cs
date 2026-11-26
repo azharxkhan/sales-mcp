@@ -15,6 +15,9 @@ public interface ICatalogReader
     /// <summary>The business's active offerings, ordered by SKU.</summary>
     Task<IReadOnlyList<Offering>> ListActiveOfferingsAsync(BusinessId businessId, CancellationToken cancellationToken);
 
+    /// <summary>The business's offering with this SKU, active or not, or null.</summary>
+    Task<Offering?> FindBySkuAsync(BusinessId businessId, Sku sku, CancellationToken cancellationToken);
+
     /// <summary>Every configuration rule that starts at one of the business's offerings.</summary>
     Task<OfferingRuleSet> GetRulesAsync(BusinessId businessId, CancellationToken cancellationToken);
 }
@@ -51,4 +54,7 @@ public interface IStockReader
 {
     /// <summary>Stock for the offering in every warehouse that holds a record for it.</summary>
     Task<IReadOnlyList<StockLevel>> GetStockAsync(OfferingId offeringId, CancellationToken cancellationToken);
+
+    /// <summary>The business's warehouses, ordered by code.</summary>
+    Task<IReadOnlyList<Warehouse>> ListWarehousesAsync(BusinessId businessId, CancellationToken cancellationToken);
 }

@@ -159,6 +159,9 @@ public class SearchCatalogTests
         public Task<IReadOnlyList<Offering>> ListActiveOfferingsAsync(BusinessId businessId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<Offering>>([.. offerings.Where(o => o.BusinessId == businessId && o.IsActive)]);
 
+        public Task<Offering?> FindBySkuAsync(BusinessId businessId, Sku sku, CancellationToken cancellationToken) =>
+            Task.FromResult(offerings.FirstOrDefault(o => o.BusinessId == businessId && o.Sku == sku));
+
         public Task<OfferingRuleSet> GetRulesAsync(BusinessId businessId, CancellationToken cancellationToken) =>
             Task.FromResult(new OfferingRuleSet());
     }
