@@ -65,6 +65,16 @@ public sealed class StdioServerProcessTests : IDisposable
     [Fact]
     public async Task An_mcp_client_connects_and_lists_the_tools()
     {
+        // Seed first, as on any run after the first. Seeding a new database takes seconds under test
+        // load, and a client that waits too long for discovery falls back to the older 2025-11-25
+        // handshake, which would make the protocol check below flaky.
+        using (var setup = SalesMcp.Server.Stdio.SalesMcpHost.CreateBuilder(["--database", DatabasePath]).Build())
+        {
+            await SalesMcp.Server.Stdio.SalesMcpHost.InitializeDatabaseAsync(setup.Services, Ct);
+        }
+
+        SqliteConnection.ClearAllPools();
+
         var transport = new StdioClientTransport(new StdioClientTransportOptions
         {
             Name = "sales-mcp",

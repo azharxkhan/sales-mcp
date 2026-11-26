@@ -67,11 +67,8 @@ public sealed record CatalogSearchItem(string Id, string Sku, string Name, strin
             item.Id.ToString(),
             item.Sku.Value,
             item.Name,
-            Lower(item.Kind.ToString()),
-            item.Unit is { } unit ? Lower(unit.ToString()) : null,
+            Wire.Name(item.Kind),
+            item.Unit is { } unit ? Wire.Name(unit) : null,
             item.DescriptionText);
     }
-
-    // Enum names are ASCII, so lower-casing the first letter is enough and avoids culture rules.
-    private static string Lower(string name) => char.ToLowerInvariant(name[0]) + name[1..];
 }
