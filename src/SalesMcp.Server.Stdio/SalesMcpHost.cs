@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
+using SalesMcp.Application.Catalog;
 using SalesMcp.Application.Session;
 using SalesMcp.Infrastructure;
 using SalesMcp.Infrastructure.Persistence;
@@ -75,6 +76,9 @@ public static partial class SalesMcpHost
         builder.Services.AddSingleton<SessionContext>();
         builder.Services.AddSingleton<ISessionContext>(sp => sp.GetRequiredService<SessionContext>());
         builder.Services.AddScoped<SessionBinder>();
+
+        // Application use cases, one per tool.
+        builder.Services.AddScoped<SearchCatalog>();
 
         var server = builder.Services
             .AddMcpServer(options => options.ServerInfo = new Implementation { Name = ServerName, Version = Version })
