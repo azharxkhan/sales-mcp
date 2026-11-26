@@ -68,7 +68,9 @@ public sealed class HarnessTests(HarnessTests.ProbeServer server) : IClassFixtur
     [Fact]
     public async Task Lists_the_probe_tools()
     {
-        Assert.Equal(["probe_echo", "probe_fail", "probe_session"], await server.ListToolNamesAsync());
+        var names = await server.ListToolNamesAsync();
+
+        Assert.Subset(names.ToHashSet(), new HashSet<string> { "probe_echo", "probe_fail", "probe_session" });
     }
 
     /// <summary>The real server plus the probe tools and resource.</summary>

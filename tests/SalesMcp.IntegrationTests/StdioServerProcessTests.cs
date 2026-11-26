@@ -63,7 +63,7 @@ public sealed class StdioServerProcessTests : IDisposable
     }
 
     [Fact]
-    public async Task An_mcp_client_connects_and_reads_the_server_identity()
+    public async Task An_mcp_client_connects_and_lists_the_tools()
     {
         var transport = new StdioClientTransport(new StdioClientTransportOptions
         {
@@ -81,8 +81,9 @@ public sealed class StdioServerProcessTests : IDisposable
         Assert.Equal("sales-mcp", server.Name);
         Assert.StartsWith("0.1.0-dev", server.Version, StringComparison.Ordinal);
 
-        // No tools are registered yet, so the server doesn't offer tools/list. The first tool (#68) adds it.
-        Assert.Null(client.ServerCapabilities?.Tools);
+        // The real transport lists the real tools.
+        var tools = await client.ListToolsAsync(cancellationToken: Ct);
+        Assert.Contains(tools, t => t.Name == "search_catalog");
     }
 
     [Fact]
