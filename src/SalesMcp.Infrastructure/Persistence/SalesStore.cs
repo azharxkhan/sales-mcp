@@ -23,6 +23,9 @@ internal sealed class SalesReader(SalesDbContext db) : ICatalogReader, ICustomer
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
+    public Task<Offering?> FindBySkuAsync(BusinessId businessId, Sku sku, CancellationToken cancellationToken) =>
+        db.Offerings.AsNoTracking().FirstOrDefaultAsync(o => o.BusinessId == businessId && o.Sku == sku, cancellationToken);
+
     public async Task<OfferingRuleSet> GetRulesAsync(BusinessId businessId, CancellationToken cancellationToken)
     {
         var rules = await db.OfferingRules.AsNoTracking()
@@ -88,6 +91,13 @@ internal sealed class SalesReader(SalesDbContext db) : ICatalogReader, ICustomer
     public async Task<IReadOnlyList<StockLevel>> GetStockAsync(OfferingId offeringId, CancellationToken cancellationToken) =>
         await db.StockLevels.AsNoTracking()
             .Where(s => s.OfferingId == offeringId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+    public async Task<IReadOnlyList<Warehouse>> ListWarehousesAsync(BusinessId businessId, CancellationToken cancellationToken) =>
+        await db.Warehouses.AsNoTracking()
+            .Where(w => w.BusinessId == businessId)
+            .OrderBy(w => w.Code)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 }
