@@ -61,20 +61,9 @@ public sealed record StockCheck(
 /// <summary>Why a stock check was refused.</summary>
 public static class CheckStockErrors
 {
-    /// <summary>The largest quantity a stock check accepts.</summary>
-    public const decimal MaxQuantity = 1_000_000m;
-
     /// <summary>The offering is a service or plan, which has no stock.</summary>
     public static readonly DomainError OfferingNotStocked = new(
         "OfferingNotStocked", "That offering is a service or plan, so it has no stock. Only products can be checked.");
-
-    /// <summary>The quantity is zero or negative.</summary>
-    public static readonly DomainError QuantityNotPositive = new(
-        Quantity.NotPositiveCode, "The quantity must be greater than zero.");
-
-    /// <summary>The quantity is beyond any real order.</summary>
-    public static readonly DomainError QuantityTooLarge = new(
-        "QuantityTooLarge", "The quantity can be at most 1000000.");
 }
 
 /// <summary>
@@ -97,15 +86,10 @@ public sealed class CheckStock(OfferingLookup offerings, IStockReader stock, Tim
         decimal? quantity,
         CancellationToken cancellationToken)
     {
-        var requested = quantity ?? 1m;
-        if (requested <= 0m)
+        var wanted = QuantityInput.Validate(quantity ?? 1m);
+        if (wanted.IsFailure)
         {
-            return Result.Failure<StockCheck>(CheckStockErrors.QuantityNotPositive);
-        }
-
-        if (requested > CheckStockErrors.MaxQuantity)
-        {
-            return Result.Failure<StockCheck>(CheckStockErrors.QuantityTooLarge);
+            return Result.Failure<StockCheck>(wanted.Error);
         }
 
         var found = await offerings.FindAsync(businessId, offering, cancellationToken).ConfigureAwait(false);
@@ -126,7 +110,6 @@ public sealed class CheckStock(OfferingLookup offerings, IStockReader stock, Tim
         // One instant for both, so the date and asOf can't straddle midnight.
         var now = time.GetUtcNow();
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, time.LocalTimeZone).DateTime);
-        var wanted = new Quantity(requested);
 
         var held = levels.Where(l => warehouses.ContainsKey(l.WarehouseId)).ToList();
         var lines = held
@@ -138,10 +121,10 @@ public sealed class CheckStock(OfferingLookup offerings, IStockReader stock, Tim
                 x.Level.Available,
                 x.Level.OnOrder,
                 x.Level.NextReceiptDate,
-                x.Level.AvailableDate(wanted, today)))
+                x.Level.AvailableDate(wanted.Value, today)))
             .ToList();
 
-        var date = StockPosition.AvailableDate(held, wanted, today);
+        var date = StockPosition.AvailableDate(held, wanted.Value, today);
         var outlook = date is null ? StockOutlook.Unknown : date == today ? StockOutlook.Now : StockOutlook.Later;
 
         return Result.Success(new StockCheck(
@@ -149,7 +132,7 @@ public sealed class CheckStock(OfferingLookup offerings, IStockReader stock, Tim
             product.Sku,
             UntrustedText.Clean(product.Name, CatalogErrors.MaxNameLength),
             product.Unit,
-            requested,
+            wanted.Value.Value,
             outlook,
             date,
             held.Sum(l => l.Available),

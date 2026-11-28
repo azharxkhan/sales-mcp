@@ -14,7 +14,7 @@ Guardrail ids (A1, D4 and so on) refer to [guardrails.md §4](../research/guardr
 | **Names** | `snake_case`, verb first: `search_catalog`, `get_price`, `create_quote` |
 | **Descriptions are written for a model** | One sentence on what the tool does, one on when to use it, one on what it does **not** do. Every parameter is described with its unit and an example. Descriptions are static strings, reviewed in PRs (D5) |
 | **The session decides the customer** | Tools read the customer from the session context, never from a model argument (D2, [ADR-0016](../adr/0016-customer-bound-to-session.md)). In self-service there is no customer parameter at all |
-| **Validate every input** | Types, ranges and lengths. Ids must exist **and** belong to the session's business and customer (D7). An unknown or out-of-scope id is an error, not an empty result. Another customer's record is "not found", never "forbidden", so ids can't be probed. A tool that takes an offering resolves it with [`OfferingLookup`](../../src/SalesMcp.Application/Catalog/OfferingLookup.cs): id or SKU, this business only, active only (`OfferingRequired`, `OfferingNotFound`, `OfferingInactive`) |
+| **Validate every input** | Types, ranges and lengths. Ids must exist **and** belong to the session's business and customer (D7). An unknown or out-of-scope id is an error, not an empty result. Another customer's record is "not found", never "forbidden", so ids can't be probed. A tool that takes an offering resolves it with [`OfferingLookup`](../../src/SalesMcp.Application/Catalog/OfferingLookup.cs): id or SKU, this business only, active only (`OfferingRequired`, `OfferingNotFound`, `OfferingInactive`). A quantity goes through [`QuantityInput`](../../src/SalesMcp.Application/Catalog/QuantityInput.cs): greater than 0 and at most 1 000 000 (`QuantityNotPositive`, `QuantityTooLarge`) |
 | **Structured output** | Return a typed result object, which the SDK serialises as structured content, plus a short text rendering. Field names are stable: they become a contract in M3 |
 | **Structured errors** | A business-rule failure is a tool error: the tool throws `ToolError.From(domainError)` ([ToolError.cs](../../src/SalesMcp.Server.Stdio/Tools/ToolError.cs)). The client gets `isError: true` and the text `An error occurred invoking '{tool}': {Code}: {Message}`, for example `… 'get_price': NoPrice: No price is set for ACM-BRG-6204 for this customer. Ask a human for a price.` Messages are written for buyers. Never a stack trace, never a library's exception message: any other exception is a bug, and the SDK reports it without details |
 | **Facts carry `asOf`** | Every price, stock and lead-time result includes the time it was true (B1) |
@@ -51,7 +51,7 @@ public sealed class PricingTools(GetPrice getPrice, ISessionContext session)
 }
 ```
 
-`GetPrice` and `PriceResult` are sketches. [CatalogTools.cs](../../src/SalesMcp.Server.Stdio/Tools/CatalogTools.cs) (`search_catalog`) is the first real tool and the pattern to copy. Check every SDK call against the pinned version, because names have changed between SDK releases.
+The outline is simplified: the real tool is [PricingTools.cs](../../src/SalesMcp.Server.Stdio/Tools/PricingTools.cs), and [CatalogTools.cs](../../src/SalesMcp.Server.Stdio/Tools/CatalogTools.cs) (`search_catalog`) is the simplest pattern to copy. Check every SDK call against the pinned version, because names have changed between SDK releases.
 
 ## Resources
 
