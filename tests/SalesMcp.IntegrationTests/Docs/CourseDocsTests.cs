@@ -26,6 +26,24 @@ public sealed partial class CourseDocsTests
         return data;
     }
 
+    [Theory]
+    [InlineData("01-what-is-mcp.md")]
+    [InlineData("02-hello-mcp-in-csharp.md")]
+    [InlineData("05-real-tools.md")]
+    public void The_m2_chapters_exist_are_indexed_and_have_the_chapter_shape(string chapter)
+    {
+        var text = File.ReadAllText(Path.Combine(_root, "docs/course", chapter));
+        var index = File.ReadAllText(Path.Combine(_root, "docs/course/README.md"));
+
+        Assert.Contains($"]({chapter})", index, StringComparison.Ordinal);
+        string[] sections =
+        [
+            "## What you'll build", "## Why it matters", "## Concepts", "## Step by step",
+            "## What can go wrong", "## Check yourself", "## Code",
+        ];
+        Assert.All(sections, s => Assert.Contains(s, text, StringComparison.Ordinal));
+    }
+
     [Fact]
     public void The_m1_chapters_and_glossary_exist()
     {
