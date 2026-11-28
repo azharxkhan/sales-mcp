@@ -31,7 +31,10 @@ public static class SessionErrors
 public sealed class SessionBinder(ICustomerReader customers)
 {
     /// <summary>Resolves <paramref name="accountNumber"/> to a binding, or explains why it can't.</summary>
-    public async Task<Result<SessionBinding>> ResolveAsync(string? accountNumber, CancellationToken cancellationToken)
+    /// <param name="accountNumber">The customer's account number, as configured.</param>
+    /// <param name="agentId">The agent serving the session. Configured until agent profiles bind it in M3.</param>
+    /// <param name="cancellationToken">Cancels the lookup.</param>
+    public async Task<Result<SessionBinding>> ResolveAsync(string? accountNumber, AgentId agentId, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(accountNumber))
         {
@@ -48,7 +51,7 @@ public sealed class SessionBinder(ICustomerReader customers)
         return matches.Count switch
         {
             0 => Result.Failure<SessionBinding>(SessionErrors.CustomerUnknown(account.Value)),
-            1 => Result.Success(new SessionBinding(matches[0].BusinessId, matches[0].Id, matches[0].AccountNumber)),
+            1 => Result.Success(new SessionBinding(matches[0].BusinessId, matches[0].Id, matches[0].AccountNumber, agentId)),
             _ => Result.Failure<SessionBinding>(SessionErrors.CustomerAmbiguous(account.Value)),
         };
     }

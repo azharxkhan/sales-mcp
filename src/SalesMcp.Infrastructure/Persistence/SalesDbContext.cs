@@ -6,6 +6,7 @@ using SalesMcp.Domain.Inventory;
 using SalesMcp.Domain.Orders;
 using SalesMcp.Domain.Pricing;
 using SalesMcp.Domain.Quotes;
+using SalesMcp.Domain.Requests;
 using SalesMcp.Infrastructure.Persistence.Conversions;
 
 namespace SalesMcp.Infrastructure.Persistence;
@@ -54,6 +55,9 @@ public sealed class SalesDbContext(DbContextOptions<SalesDbContext> options) : D
 
     /// <summary>Sales orders, with their lines.</summary>
     public DbSet<SalesOrder> SalesOrders => Set<SalesOrder>();
+
+    /// <summary>First results of mutating tool calls, by request id (guardrail A8).</summary>
+    public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
     /// <inheritdoc />
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

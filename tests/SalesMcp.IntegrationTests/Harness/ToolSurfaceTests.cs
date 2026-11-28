@@ -7,7 +7,7 @@ public sealed class ToolSurfaceTests(McpServerFixture server) : IClassFixture<Mc
     /// The M2 tools, in name order. Each tool PR (#68 to #73) adds its name here, so the server can
     /// never offer a tool nobody reviewed. M3 turns this into a full contract snapshot (guardrail D5).
     /// </summary>
-    private static readonly string[] _expectedTools = ["check_stock", "get_customer", "get_customer_credit", "get_price", "search_catalog"];
+    private static readonly string[] _expectedTools = ["check_stock", "create_quote", "get_customer", "get_customer_credit", "get_price", "search_catalog"];
 
     [Fact]
     public async Task Lists_exactly_the_expected_tools() =>

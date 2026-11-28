@@ -8,7 +8,9 @@ using SalesMcp.Application.Catalog;
 using SalesMcp.Application.Customers;
 using SalesMcp.Application.Inventory;
 using SalesMcp.Application.Pricing;
+using SalesMcp.Application.Quotes;
 using SalesMcp.Application.Session;
+using SalesMcp.Domain.Common;
 using SalesMcp.Domain.Pricing;
 using SalesMcp.Domain.Tax;
 using SalesMcp.Infrastructure;
@@ -32,6 +34,7 @@ public static partial class SalesMcpHost
     {
         ["--database"] = ServerSettings.DatabasePathKey,
         ["--customer"] = ServerSettings.CustomerKey,
+        ["--agent"] = ServerSettings.AgentKey,
     };
 
     /// <summary>The server's version, from the assembly's informational version.</summary>
@@ -91,6 +94,7 @@ public static partial class SalesMcpHost
         builder.Services.AddScoped<GetPrice>();
         builder.Services.AddScoped<GetCustomer>();
         builder.Services.AddScoped<GetCustomerCredit>();
+        builder.Services.AddScoped<CreateQuote>();
 
         var server = builder.Services
             .AddMcpServer(options => options.ServerInfo = new Implementation { Name = ServerName, Version = Version })
@@ -131,9 +135,16 @@ public static partial class SalesMcpHost
         var settings = services.GetRequiredService<ServerSettings>();
         var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(SalesMcpHost).FullName!);
 
+        var agent = AgentId.Create(settings.Agent);
+        if (agent.IsFailure)
+        {
+            LogBindFailed(logger, agent.Error.Code, agent.Error.Message);
+            return false;
+        }
+
         await using var scope = services.CreateAsyncScope();
         var result = await scope.ServiceProvider.GetRequiredService<SessionBinder>()
-            .ResolveAsync(settings.CustomerAccount, cancellationToken)
+            .ResolveAsync(settings.CustomerAccount, agent.Value, cancellationToken)
             .ConfigureAwait(false);
 
         if (result.IsFailure)

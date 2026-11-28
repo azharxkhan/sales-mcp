@@ -1,4 +1,6 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using SalesMcp.Application.Persistence;
 using SalesMcp.Domain.Catalog;
 using SalesMcp.Domain.Common;
@@ -7,12 +9,16 @@ using SalesMcp.Domain.Inventory;
 using SalesMcp.Domain.Orders;
 using SalesMcp.Domain.Pricing;
 using SalesMcp.Domain.Quotes;
+using SalesMcp.Domain.Requests;
 
 namespace SalesMcp.Infrastructure.Persistence;
 
 /// <summary>Read-only queries. Entities come back untracked, so reads can't be saved by accident.</summary>
-internal sealed class SalesReader(SalesDbContext db) : ICatalogReader, ICustomerReader, IPricingReader, IStockReader
+internal sealed class SalesReader(SalesDbContext db) : IBusinessReader, ICatalogReader, ICustomerReader, IPricingReader, IStockReader
 {
+    public Task<Business?> GetBusinessAsync(BusinessId id, CancellationToken cancellationToken) =>
+        db.Businesses.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
+
     public Task<Offering?> GetOfferingAsync(OfferingId id, CancellationToken cancellationToken) =>
         db.Offerings.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
@@ -103,7 +109,7 @@ internal sealed class SalesReader(SalesDbContext db) : ICatalogReader, ICustomer
 }
 
 /// <summary>Tracked access to the documents agents create, saved together through <see cref="IUnitOfWork"/>.</summary>
-internal sealed class SalesDocuments(SalesDbContext db) : IQuoteRepository, IOrderRepository, IUnitOfWork
+internal sealed class SalesDocuments(SalesDbContext db) : IQuoteRepository, IOrderRepository, IQuoteNumbers, IIdempotencyStore, IUnitOfWork
 {
     public Task<Quote?> GetAsync(QuoteId id, CancellationToken cancellationToken) =>
         db.Quotes.FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
@@ -115,5 +121,35 @@ internal sealed class SalesDocuments(SalesDbContext db) : IQuoteRepository, IOrd
 
     public void Add(SalesOrder order) => db.SalesOrders.Add(order);
 
+    public async Task<Result<QuoteNumber>> NextAsync(int year, CancellationToken cancellationToken)
+    {
+        // Numbers are fixed-width (Q-2026-000123), so the text order is the number order.
+        var prefix = string.Create(CultureInfo.InvariantCulture, $"Q-{year:D4}-%");
+        var highest = await db.Database
+            .SqlQuery<string>($"SELECT \"Number\" AS \"Value\" FROM \"Quotes\" WHERE \"Number\" LIKE {prefix} ORDER BY \"Number\" DESC LIMIT 1")
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var last = highest.Count == 0 ? 0 : int.Parse(highest[0].AsSpan(7), CultureInfo.InvariantCulture);
+        return QuoteNumber.From(year, last + 1);
+    }
+
+    public Task<IdempotencyRecord?> FindAsync(string key, string tool, CustomerId customerId, CancellationToken cancellationToken) =>
+        db.IdempotencyRecords.FirstOrDefaultAsync(r => r.Key == key && r.Tool == tool && r.CustomerId == customerId, cancellationToken);
+
+    public void Add(IdempotencyRecord record) => db.IdempotencyRecords.Add(record);
+
     public Task SaveChangesAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
+
+    // SQLite: Microsoft.Data.Sqlite starts a non-deferred transaction with BEGIN IMMEDIATE, which takes
+    // the write lock at once, so concurrent calls queue instead of reading the same next number.
+    public async Task<IWriteTransaction> BeginTransactionAsync(CancellationToken cancellationToken) =>
+        new WriteTransaction(await db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false));
+
+    private sealed class WriteTransaction(IDbContextTransaction transaction) : IWriteTransaction
+    {
+        public Task CommitAsync(CancellationToken cancellationToken) => transaction.CommitAsync(cancellationToken);
+
+        public ValueTask DisposeAsync() => transaction.DisposeAsync();
+    }
 }
