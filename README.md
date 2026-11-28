@@ -122,7 +122,7 @@ dotnet test --solution SalesMcp.slnx
 | Document | What's in it |
 |---|---|
 | [Project plan](docs/PLAN.md) | Vision, decisions (ADRs), agent profiles and playbooks, domain model, MCP surface, architecture, evals, DevOps, milestones |
-| [Course](docs/course/README.md) | Chapters written alongside the code. Chapters 3 (modelling a sales domain) and 4 (persistence) are drafted |
+| [Course](docs/course/README.md) | Chapters written alongside the code. Chapters 1 to 5 are drafted: MCP basics, a first server in C#, the sales domain, persistence and real tools |
 | [Domain glossary](docs/domain/glossary.md) | Quote, order, hold, back-order, allocation, credit exposure, ATP and the pricing terms, linked to the code |
 | [Architecture decisions](docs/adr/README.md) | ADR-0001 to ADR-0016: stack, architecture, transports, agent design and the guardrail core, each with context, trade-offs and alternatives |
 | [State of sales 2026](docs/research/sales-landscape-2026.md) | Trends, then vs now, how selling evolved, reading list |
