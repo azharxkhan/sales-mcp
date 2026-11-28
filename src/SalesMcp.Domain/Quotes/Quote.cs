@@ -1,3 +1,4 @@
+using SalesMcp.Domain.Catalog;
 using SalesMcp.Domain.Common;
 using SalesMcp.Domain.Customers;
 using SalesMcp.Domain.Tax;
@@ -38,7 +39,9 @@ public enum RiskReducer
 
 /// <summary>
 /// A priced offer to one customer. The only way to make an offer (ADR-0015): chat text is never an
-/// offer. Each line keeps the price it was quoted at, and totals are sums of the rounded lines.
+/// offer. Each line keeps the price it was quoted at, and totals are sums of the rounded lines. The
+/// quote also keeps the names, account number and payment terms its document states, so the document
+/// never changes when the business or customer record does.
 /// </summary>
 /// <remarks>
 /// M1 is a skeleton: creation, totals and expiry. Allowed risk-reducers are checked against the
@@ -59,7 +62,8 @@ public sealed class Quote
     private Quote(
         QuoteId id,
         QuoteNumber number,
-        CustomerId customerId,
+        Business business,
+        Customer customer,
         AgentId agentId,
         DateOnly issuedOn,
         DateOnly validUntil,
@@ -69,7 +73,11 @@ public sealed class Quote
     {
         Id = id;
         Number = number;
-        CustomerId = customerId;
+        CustomerId = customer.Id;
+        BusinessName = business.Name;
+        CustomerName = customer.Name;
+        AccountNumber = customer.AccountNumber;
+        PaymentTerms = customer.PaymentTerms;
         AgentId = agentId;
         IssuedOn = issuedOn;
         ValidUntil = validUntil;
@@ -87,6 +95,18 @@ public sealed class Quote
 
     /// <summary>The customer it is addressed to.</summary>
     public CustomerId CustomerId { get; }
+
+    /// <summary>The seller's name when quoted.</summary>
+    public string BusinessName { get; }
+
+    /// <summary>The buyer's name when quoted.</summary>
+    public string CustomerName { get; }
+
+    /// <summary>The buyer's account number when quoted.</summary>
+    public AccountNumber AccountNumber { get; }
+
+    /// <summary>The payment terms offered: the buyer's terms when quoted.</summary>
+    public PaymentTerms PaymentTerms { get; }
 
     /// <summary>The AI agent that issued it, for the disclosure stamp and the audit trail.</summary>
     public AgentId AgentId { get; }
@@ -118,6 +138,7 @@ public sealed class Quote
     /// <summary>Validates the lines and issues a quote valid for <paramref name="validDays"/> days.</summary>
     /// <param name="id">The quote's id.</param>
     /// <param name="number">Its printed number.</param>
+    /// <param name="business">The seller, which must be the customer's business.</param>
     /// <param name="customer">The buyer.</param>
     /// <param name="agentId">The agent issuing it.</param>
     /// <param name="issuedOn">Today, from the caller's clock.</param>
@@ -127,6 +148,7 @@ public sealed class Quote
     public static Result<Quote> Create(
         QuoteId id,
         QuoteNumber number,
+        Business business,
         Customer customer,
         AgentId agentId,
         DateOnly issuedOn,
@@ -134,9 +156,15 @@ public sealed class Quote
         IEnumerable<RiskReducer> riskReducers,
         int validDays = QuoteErrors.DefaultValidDays)
     {
+        ArgumentNullException.ThrowIfNull(business);
         ArgumentNullException.ThrowIfNull(customer);
         ArgumentNullException.ThrowIfNull(lines);
         ArgumentNullException.ThrowIfNull(riskReducers);
+
+        if (business.Id != customer.BusinessId)
+        {
+            return Result.Failure<Quote>(QuoteErrors.SellerMismatch);
+        }
 
         if (validDays is < 1 or > QuoteErrors.MaxValidDays)
         {
@@ -160,7 +188,8 @@ public sealed class Quote
         return Result.Success(new Quote(
             id,
             number,
-            customer.Id,
+            business,
+            customer,
             agentId,
             issuedOn,
             issuedOn.AddDays(validDays),

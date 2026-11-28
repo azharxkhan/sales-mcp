@@ -3,7 +3,6 @@ using SalesMcp.Application.Catalog;
 using SalesMcp.Application.Customers;
 using SalesMcp.Application.Persistence;
 using SalesMcp.Application.Requests;
-using SalesMcp.Domain.Catalog;
 using SalesMcp.Domain.Common;
 using SalesMcp.Domain.Customers;
 using SalesMcp.Domain.Pricing;
@@ -20,26 +19,14 @@ public sealed record QuoteLineRequest(string? Offering, decimal Quantity);
 /// <summary>A quote line ready to show: the stored line with its name and steps cleaned as untrusted text.</summary>
 /// <param name="Line">The line as stored, with its price snapshot.</param>
 /// <param name="Name">The name as quoted, cleaned.</param>
-/// <param name="Unit">The unit the quantity is in; products only.</param>
 /// <param name="Steps">The price steps, with each detail cleaned.</param>
-public sealed record IssuedQuoteLine(QuoteLine Line, string Name, UnitOfMeasure? Unit, IReadOnlyList<PriceStep> Steps);
+public sealed record IssuedQuoteLine(QuoteLine Line, string Name, IReadOnlyList<PriceStep> Steps);
 
-/// <summary>An issued quote with what its document needs.</summary>
+/// <summary>An issued quote ready to show.</summary>
 /// <param name="Quote">The stored quote.</param>
-/// <param name="BusinessName">The seller.</param>
-/// <param name="CustomerName">The buyer.</param>
-/// <param name="AccountNumber">The buyer's account number.</param>
-/// <param name="PaymentTerms">The buyer's payment terms.</param>
 /// <param name="Lines">The lines, in order.</param>
 /// <param name="Document">The rendered document (<see cref="QuoteDocument"/>).</param>
-public sealed record IssuedQuote(
-    Quote Quote,
-    string BusinessName,
-    string CustomerName,
-    AccountNumber AccountNumber,
-    PaymentTerms PaymentTerms,
-    IReadOnlyList<IssuedQuoteLine> Lines,
-    string Document);
+public sealed record IssuedQuote(Quote Quote, IReadOnlyList<IssuedQuoteLine> Lines, string Document);
 
 /// <summary>Errors from <see cref="CreateQuote"/> beyond the quote's own rules.</summary>
 public static class CreateQuoteErrors
@@ -67,10 +54,11 @@ public static class CreateQuoteErrors
 /// <remarks>
 /// Everything runs in one write transaction: the idempotency check, the next quote number and the
 /// save. A failure saves nothing and uses no number, so numbers have no gaps. The idempotency record
-/// holds the quote's id; a retry rebuilds the result from the stored quote, whose lines are a
-/// snapshot that never changes, so it gets the same figures as the first call.
+/// holds the quote's id; a retry rebuilds the result from the stored quote, which is a snapshot that
+/// never changes, so it gets the same document as the first call.
 /// </remarks>
 /// <param name="offerings">Resolves each line's offering.</param>
+/// <param name="businesses">Reads the seller.</param>
 /// <param name="customers">Reads the session's customer.</param>
 /// <param name="pricing">Loads the customer's price lists and contracts.</param>
 /// <param name="resolver">Works out each line's price.</param>
@@ -79,9 +67,9 @@ public static class CreateQuoteErrors
 /// <param name="idempotency">Remembers request ids.</param>
 /// <param name="unitOfWork">Saves it all in one transaction.</param>
 /// <param name="time">The clock for the issue date and the pricing moment.</param>
-/// <param name="presenter">Prepares the stored quote for showing.</param>
 public sealed class CreateQuote(
     OfferingLookup offerings,
+    IBusinessReader businesses,
     ICustomerReader customers,
     IPricingReader pricing,
     PriceResolver resolver,
@@ -89,8 +77,7 @@ public sealed class CreateQuote(
     IQuoteNumbers numbers,
     IIdempotencyStore idempotency,
     IUnitOfWork unitOfWork,
-    TimeProvider time,
-    QuotePresenter presenter)
+    TimeProvider time)
 {
     /// <summary>The tool name idempotency records are kept under.</summary>
     public const string ToolName = "create_quote";
@@ -144,6 +131,9 @@ public sealed class CreateQuote(
             return Result.Failure<IssuedQuote>(CustomerQueryErrors.CustomerNotFound);
         }
 
+        var business = await businesses.GetBusinessAsync(businessId, cancellationToken).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("The session's business is missing.");
+
         var priced = await PriceAsync(businessId, customer, requested, now, cancellationToken).ConfigureAwait(false);
         if (priced.IsFailure)
         {
@@ -157,7 +147,7 @@ public sealed class CreateQuote(
             return Result.Failure<IssuedQuote>(number.Error);
         }
 
-        var quote = Quote.Create(QuoteId.New(), number.Value, customer, agentId, today, priced.Value, []);
+        var quote = Quote.Create(QuoteId.New(), number.Value, business, customer, agentId, today, priced.Value, []);
         if (quote.IsFailure)
         {
             return Result.Failure<IssuedQuote>(quote.Error);
@@ -177,7 +167,7 @@ public sealed class CreateQuote(
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
-        return Result.Success(await presenter.PresentAsync(quote.Value, customer, cancellationToken).ConfigureAwait(false));
+        return Result.Success(QuotePresenter.Present(quote.Value));
     }
 
     private static Result<IReadOnlyList<(string Reference, Quantity Quantity)>> CheckLines(IReadOnlyList<QuoteLineRequest?>? lines)
@@ -256,9 +246,7 @@ public sealed class CreateQuote(
             ?? throw new InvalidOperationException("An idempotency record has no response.");
         var quote = await quotes.GetAsync(new QuoteId(stored.QuoteId), cancellationToken).ConfigureAwait(false)
             ?? throw new InvalidOperationException($"Idempotency record {record.Key} points to a missing quote.");
-        var customer = await customers.GetCustomerAsync(quote.CustomerId, cancellationToken).ConfigureAwait(false)
-            ?? throw new InvalidOperationException($"Quote {quote.Number} has no customer.");
-        return await presenter.PresentAsync(quote, customer, cancellationToken).ConfigureAwait(false);
+        return QuotePresenter.Present(quote);
     }
 
     private sealed record StoredResponse(Guid QuoteId);

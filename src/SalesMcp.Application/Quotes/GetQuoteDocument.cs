@@ -18,10 +18,8 @@ public static class QuoteQueryErrors
 /// at the top, so an old document isn't mistaken for a live offer.
 /// </summary>
 /// <param name="quotes">Reads quotes.</param>
-/// <param name="customers">Reads the session's customer.</param>
-/// <param name="presenter">Renders the document.</param>
 /// <param name="time">The clock for today.</param>
-public sealed class GetQuoteDocument(IQuoteRepository quotes, ICustomerReader customers, QuotePresenter presenter, TimeProvider time)
+public sealed class GetQuoteDocument(IQuoteRepository quotes, TimeProvider time)
 {
     /// <summary>The document of <paramref name="quote"/>, a quote id or number.</summary>
     /// <param name="customerId">The session's customer. Never a model argument.</param>
@@ -35,13 +33,7 @@ public sealed class GetQuoteDocument(IQuoteRepository quotes, ICustomerReader cu
             return Result.Failure<string>(QuoteQueryErrors.QuoteNotFound);
         }
 
-        var customer = await customers.GetCustomerAsync(customerId, cancellationToken).ConfigureAwait(false);
-        if (customer is null)
-        {
-            return Result.Failure<string>(QuoteQueryErrors.QuoteNotFound);
-        }
-
-        var issued = await presenter.PresentAsync(found, customer, cancellationToken).ConfigureAwait(false);
+        var issued = QuotePresenter.Present(found);
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(time.GetUtcNow(), time.LocalTimeZone).DateTime);
         return Result.Success(Notice(found, today) + issued.Document);
     }

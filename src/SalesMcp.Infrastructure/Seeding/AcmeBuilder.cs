@@ -40,7 +40,7 @@ internal sealed class AcmeBuilder(DateOnly today)
         var customers = BuildCustomers();
         var contacts = BuildContacts(customers);
         var contracts = BuildContracts(customers);
-        var (quotes, orders) = BuildHistory(customers, priceLists, contracts);
+        var (quotes, orders) = BuildHistory(business, customers, priceLists, contracts);
 
         // Discontinued after the history, so old quotes still name them.
         foreach (var sku in AcmeCatalog.DiscontinuedSkus)
@@ -345,6 +345,7 @@ internal sealed class AcmeBuilder(DateOnly today)
     }
 
     private (List<Quote> Quotes, List<SalesOrder> Orders) BuildHistory(
+        Business business,
         List<SeededCustomer> customers,
         List<PriceList> priceLists,
         List<ContractPrice> contracts)
@@ -394,6 +395,7 @@ internal sealed class AcmeBuilder(DateOnly today)
             var quote = Ok(Quote.Create(
                 new QuoteId(SeedIds.For("acme/quote/" + number.Value)),
                 number,
+                business,
                 customer,
                 issuedOn >= today.AddDays(-90) ? _manifest.Agent : _salesDesk,
                 issuedOn,

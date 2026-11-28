@@ -22,6 +22,10 @@ public static class QuoteErrors
     public static DomainError CustomerMismatch { get; } =
         new("QuoteCustomerMismatch", "Every line must be priced for the quote's customer.");
 
+    /// <summary>The seller isn't the business the customer buys from.</summary>
+    public static DomainError SellerMismatch { get; } =
+        new("SellerMismatch", "A quote must come from the customer's business.");
+
     /// <summary>A line's offering belongs to another business.</summary>
     public static DomainError BusinessMismatch { get; } =
         new("BusinessMismatch", "Every line must be for an item sold by the customer's business.");

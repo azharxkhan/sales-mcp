@@ -26,7 +26,7 @@ The sales and ERP terms this project uses, and what each means here. Most of the
 | **Price list** | A set of prices. Each business has one default list. A customer may also have their own | M1 | [`PriceList`](../../src/SalesMcp.Domain/Pricing/PriceList.cs) |
 | **Quantity break** | A lower unit price from a minimum quantity, for example ZAR 90 each from 10 units. The best break for the quantity applies | M1 | [`PriceList.BestBreak`](../../src/SalesMcp.Domain/Pricing/PriceList.cs) |
 | **Price breakdown** | The record of how a price was reached: its source, unit price, gross, discount, VAT, total, the time it was priced, and one step per decision. It lets an agent explain a price, not just state it | M1 | [`PriceBreakdown`](../../src/SalesMcp.Domain/Pricing/PriceBreakdown.cs) |
-| **Snapshot** | A copy of the price breakdown stored on a quote line. Later price or catalog changes don't affect it | M1 | [`QuoteLine`](../../src/SalesMcp.Domain/Quotes/QuoteLine.cs) |
+| **Snapshot** | A copy, stored on a quote and its lines, of everything its document states, including each line's price breakdown. Later price, catalog or customer changes don't affect it | M1 | [`QuoteLine`](../../src/SalesMcp.Domain/Quotes/QuoteLine.cs) |
 | **VAT code** | *Standard* (15% in South Africa), *zero-rated* (0%, still reported) or *exempt* (no VAT at all). VAT is calculated and rounded per line ([ADR-0007](../adr/0007-locale-zar-and-vat-codes.md)) | M1 | [`VatCode`](../../src/SalesMcp.Domain/Tax/VatCode.cs) |
 | **Risk-reducer** | Something that lowers the buyer's risk instead of the price: a trial, phased delivery, cancel anytime or a return window | M1 | [`RiskReducer`](../../src/SalesMcp.Domain/Quotes/Quote.cs) |
 

@@ -95,7 +95,6 @@ public static partial class SalesMcpHost
         builder.Services.AddScoped<GetPrice>();
         builder.Services.AddScoped<GetCustomer>();
         builder.Services.AddScoped<GetCustomerCredit>();
-        builder.Services.AddScoped<QuotePresenter>();
         builder.Services.AddScoped<CreateQuote>();
         builder.Services.AddScoped<GetQuoteDocument>();
         builder.Services.AddScoped<GetCatalogSummary>();

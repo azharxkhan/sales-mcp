@@ -28,6 +28,7 @@ public sealed class QuoteLine
         OfferingId = offering.Id;
         Sku = offering.Sku;
         Name = offering.Name;
+        Unit = (offering as Product)?.Unit;
 
         // Copy the steps so the snapshot can't be changed through the original list.
         Price = price with { Steps = [.. price.Steps] };
@@ -44,6 +45,9 @@ public sealed class QuoteLine
 
     /// <summary>The name when quoted.</summary>
     public string Name { get; }
+
+    /// <summary>The unit the quantity is in, when quoted; products only.</summary>
+    public UnitOfMeasure? Unit { get; }
 
     /// <summary>The price breakdown when quoted.</summary>
     public PriceBreakdown Price { get; }
