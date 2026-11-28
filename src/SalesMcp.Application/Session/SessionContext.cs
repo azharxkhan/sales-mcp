@@ -17,13 +17,17 @@ public interface ISessionContext
 
     /// <summary>The customer's account number, for messages and logs.</summary>
     AccountNumber AccountNumber { get; }
+
+    /// <summary>The AI agent serving the session, recorded on the documents it issues.</summary>
+    AgentId AgentId { get; }
 }
 
 /// <summary>The business and customer a session is bound to.</summary>
 /// <param name="BusinessId">The business.</param>
 /// <param name="CustomerId">The customer.</param>
 /// <param name="AccountNumber">The customer's account number.</param>
-public sealed record SessionBinding(BusinessId BusinessId, CustomerId CustomerId, AccountNumber AccountNumber);
+/// <param name="AgentId">The agent serving the session.</param>
+public sealed record SessionBinding(BusinessId BusinessId, CustomerId CustomerId, AccountNumber AccountNumber, AgentId AgentId);
 
 /// <summary>
 /// The session context for one connection. The host binds it once, before any tool runs; it can't be
@@ -44,6 +48,9 @@ public sealed class SessionContext : ISessionContext
 
     /// <inheritdoc />
     public AccountNumber AccountNumber => Binding.AccountNumber;
+
+    /// <inheritdoc />
+    public AgentId AgentId => Binding.AgentId;
 
     private SessionBinding Binding =>
         _binding ?? throw new InvalidOperationException("No customer is bound to this session yet.");

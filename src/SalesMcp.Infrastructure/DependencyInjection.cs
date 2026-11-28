@@ -28,11 +28,14 @@ public static class DependencyInjection
         services.AddScoped<ICustomerReader>(sp => sp.GetRequiredService<SalesReader>());
         services.AddScoped<IPricingReader>(sp => sp.GetRequiredService<SalesReader>());
         services.AddScoped<IStockReader>(sp => sp.GetRequiredService<SalesReader>());
+        services.AddScoped<IBusinessReader>(sp => sp.GetRequiredService<SalesReader>());
 
         services.AddScoped<SalesDocuments>();
         services.AddScoped<IQuoteRepository>(sp => sp.GetRequiredService<SalesDocuments>());
         services.AddScoped<IOrderRepository>(sp => sp.GetRequiredService<SalesDocuments>());
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<SalesDocuments>());
+        services.AddScoped<IQuoteNumbers>(sp => sp.GetRequiredService<SalesDocuments>());
+        services.AddScoped<IIdempotencyStore>(sp => sp.GetRequiredService<SalesDocuments>());
 
         services.AddScoped<AcmeSeeder>();
         services.AddScoped<DatabaseInitializer>();

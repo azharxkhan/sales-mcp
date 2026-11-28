@@ -6,6 +6,13 @@ using SalesMcp.Domain.Pricing;
 
 namespace SalesMcp.Application.Persistence;
 
+/// <summary>Reads businesses.</summary>
+public interface IBusinessReader
+{
+    /// <summary>The business with this id, or null.</summary>
+    Task<Business?> GetBusinessAsync(BusinessId id, CancellationToken cancellationToken);
+}
+
 /// <summary>Reads the catalog. Narrow on purpose: tools ask for exactly what they need.</summary>
 public interface ICatalogReader
 {

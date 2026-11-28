@@ -553,6 +553,38 @@ namespace SalesMcp.Infrastructure.Migrations.Sqlite
                     b.ToTable("QuoteLines", (string)null);
                 });
 
+            modelBuilder.Entity("SalesMcp.Domain.Requests.IdempotencyRecord", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Tool")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ResponseJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Key", "Tool", "CustomerId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("IdempotencyRecords", (string)null);
+                });
+
             modelBuilder.Entity("SalesMcp.Domain.Catalog.Plan", b =>
                 {
                     b.HasBaseType("SalesMcp.Domain.Catalog.Offering");
@@ -784,6 +816,15 @@ namespace SalesMcp.Infrastructure.Migrations.Sqlite
                     b.HasOne("SalesMcp.Domain.Quotes.Quote", null)
                         .WithMany("Lines")
                         .HasForeignKey("QuoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SalesMcp.Domain.Requests.IdempotencyRecord", b =>
+                {
+                    b.HasOne("SalesMcp.Domain.Customers.Customer", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
