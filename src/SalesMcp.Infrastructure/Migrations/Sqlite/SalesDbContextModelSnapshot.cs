@@ -489,9 +489,19 @@ namespace SalesMcp.Infrastructure.Migrations.Sqlite
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("AgentId")
                         .IsRequired()
                         .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BusinessName")
+                        .IsRequired()
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Currency")
@@ -500,6 +510,11 @@ namespace SalesMcp.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<DateOnly>("IssuedOn")
@@ -522,6 +537,21 @@ namespace SalesMcp.Infrastructure.Migrations.Sqlite
 
                     b.Property<DateOnly>("ValidUntil")
                         .HasColumnType("TEXT");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "PaymentTerms", "SalesMcp.Domain.Quotes.Quote.PaymentTerms#PaymentTerms", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("Basis")
+                                .IsRequired()
+                                .HasMaxLength(32)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("PaymentTermsBasis");
+
+                            b1.Property<int>("Days")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("PaymentTermsDays");
+                        });
 
                     b.HasKey("Id");
 
@@ -556,6 +586,10 @@ namespace SalesMcp.Infrastructure.Migrations.Sqlite
 
                     b.Property<string>("Sku")
                         .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Unit")
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
 

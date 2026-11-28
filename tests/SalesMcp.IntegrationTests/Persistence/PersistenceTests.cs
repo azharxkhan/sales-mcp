@@ -231,7 +231,7 @@ public sealed class PersistenceTests : IAsyncLifetime
             new(o, resolver.Resolve(new PriceRequest(o, customer, new Quantity(qty), new Percentage(discount), _now), sources).Value);
 
         var quote = Quote.Create(
-            QuoteId.New(), QuoteNumber.From(2026, 1).Value, customer, AgentId.Create("acme-distributor-jolt").Value, _today,
+            QuoteId.New(), QuoteNumber.From(2026, 1).Value, _acme, customer, AgentId.Create("acme-distributor-jolt").Value, _today,
             [Priced(bearing, 3, 12.5m), Priced(bread, 7, 0m)], [RiskReducer.ReturnWindow, RiskReducer.PhasedDelivery]).Value;
         await _db.InScopeAsync(async sp =>
         {
@@ -243,6 +243,13 @@ public sealed class PersistenceTests : IAsyncLifetime
 
         Assert.Equal(quote.Number, loaded.Number);
         Assert.Equal(quote.AgentId, loaded.AgentId);
+        Assert.Equal(quote.BusinessName, loaded.BusinessName);
+        Assert.Equal(quote.CustomerName, loaded.CustomerName);
+        Assert.Equal(quote.AccountNumber, loaded.AccountNumber);
+        Assert.Equal(quote.PaymentTerms, loaded.PaymentTerms);
+        Assert.Equal(
+            quote.Lines.Select(l => l.Unit),
+            loaded.Lines.OrderBy(l => l.LineNumber).Select(l => l.Unit));
         Assert.Equal(QuoteStatus.Issued, loaded.Status);
         Assert.Equal(quote.IssuedOn, loaded.IssuedOn);
         Assert.Equal(quote.ValidUntil, loaded.ValidUntil);

@@ -26,10 +26,11 @@ public class CreateQuoteTests
     private static Product NewProduct(string sku, VatCode vat = VatCode.Standard) =>
         Product.Create(OfferingId.New(), _acme, sku, "Item " + sku, "", vat, UnitOfMeasure.Box, 3, 30).Value;
 
-    private static Customer NewCustomer(BusinessId? business = null) =>
+    private static Customer NewCustomer(
+        BusinessId? business = null, CustomerId? id = null, string account = "KES-001", string name = "Kestrel Ridge", int days = 30) =>
         Customer.Create(
-            CustomerId.New(), business ?? _acme, "KES-001", "Kestrel Ridge", null, Zar(50_000m), Zar(0m),
-            PaymentTerms.Create(PaymentTermsBasis.DaysFromEndOfMonth, 30).Value, null,
+            id ?? CustomerId.New(), business ?? _acme, account, name, null, Zar(50_000m), Zar(0m),
+            PaymentTerms.Create(PaymentTermsBasis.DaysFromEndOfMonth, days).Value, null,
             allowBackOrders: true, allowPartialShipment: true).Value;
 
     private static QuoteLineRequest?[] Lines(params (string Offering, decimal Quantity)[] lines) =>
@@ -52,7 +53,7 @@ public class CreateQuoteTests
         Assert.Equal(Zar(345m), quote.Lines[0].Total);
         Assert.Equal(Zar(385m), quote.Totals.Total);
         Assert.All(quote.Lines, l => Assert.True(l.Price.Discount.IsZero));
-        Assert.Equal(UnitOfMeasure.Box, issued.Lines[0].Unit);
+        Assert.Equal(UnitOfMeasure.Box, issued.Lines[0].Line.Unit);
         Assert.Single(world.Documents.Quotes);
         Assert.True(world.Documents.Committed);
     }
@@ -99,6 +100,27 @@ public class CreateQuoteTests
         Assert.Equal(first.Quote.Id, retry.Quote.Id);
         Assert.Equal(first.Document, retry.Document);
         Assert.Single(world.Documents.Quotes);
+    }
+
+    [Fact]
+    public async Task The_document_is_unchanged_after_the_seller_customer_and_unit_change()
+    {
+        var world = new World();
+        var first = (await world.Create(Lines(("ACM-FAS-101", 2m)), "req-0001")).Value;
+
+        world.Customers[0] = NewCustomer(id: world.Customer.Id, account: "KES-999", name: "Kestrel Holdings", days: 7);
+        world.Businesses.Name = "Acme Industrial";
+        world.Offerings[0] = Product.Create(
+            world.Offerings[0].Id, _acme, "ACM-FAS-101", "Renamed", "", VatCode.Standard, UnitOfMeasure.Each, 3, 30).Value;
+        var retry = (await world.Create(Lines(("ACM-FAS-101", 2m)), "req-0001")).Value;
+        var stored = await world.Document(first.Quote.Id);
+
+        Assert.Equal(first.Document, retry.Document);
+        Assert.Equal(first.Document, stored);
+        Assert.Contains("Payment: 30 days from end of month.", stored, StringComparison.Ordinal);
+        Assert.Contains("**To:** Kestrel Ridge (account KES-001)", stored, StringComparison.Ordinal);
+        Assert.Contains("**From:** Acme Distributors", stored, StringComparison.Ordinal);
+        Assert.Contains("| 2 box |", stored, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -242,16 +264,22 @@ public class CreateQuoteTests
 
         public MovableTime Time { get; } = new(_now);
 
+        public FakeBusinesses Businesses { get; } = new();
+
         public FakeDocuments Documents { get; } = new();
 
         public Task<Result<IssuedQuote>> Create(IReadOnlyList<QuoteLineRequest?>? lines, string? requestId) =>
             CreateFor(Customer, lines, requestId);
+
+        public async Task<string> Document(QuoteId id) =>
+            (await new GetQuoteDocument(Documents, Time).ExecuteAsync(Customer.Id, id.ToString(), Ct)).Value;
 
         public Task<Result<IssuedQuote>> CreateFor(Customer customer, IReadOnlyList<QuoteLineRequest?>? lines, string? requestId)
         {
             var catalog = new FakeCatalog(Offerings);
             var useCase = new CreateQuote(
                 new OfferingLookup(catalog),
+                Businesses,
                 new FakeCustomers(Customers),
                 new FakePricing(new PriceSources(List, null, [])),
                 new PriceResolver(VatRateTable.SouthAfrica),
@@ -259,8 +287,7 @@ public class CreateQuoteTests
                 Documents,
                 Documents,
                 Documents,
-                Time,
-                new QuotePresenter(new FakeBusinesses(), catalog));
+                Time);
             return useCase.ExecuteAsync(_acme, customer.Id, _agent, lines, requestId, Ct);
         }
     }
@@ -336,8 +363,10 @@ public class CreateQuoteTests
 
     private sealed class FakeBusinesses : IBusinessReader
     {
+        public string Name { get; set; } = "Acme Distributors";
+
         public Task<Business?> GetBusinessAsync(BusinessId id, CancellationToken cancellationToken) =>
-            Task.FromResult<Business?>(Business.Create(id, "Acme Distributors", "ZAR", "en-ZA").Value);
+            Task.FromResult<Business?>(Business.Create(id, Name, "ZAR", "en-ZA").Value);
     }
 
     private sealed class FakeCatalog(List<Offering> offerings) : ICatalogReader

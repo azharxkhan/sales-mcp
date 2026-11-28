@@ -26,8 +26,8 @@ public static class QuoteDocument
 
         Line(text, $"# Quote {q.Number}");
         Line(text);
-        Line(text, $"**From:** {Cell(quote.BusinessName)}  ");
-        Line(text, $"**To:** {Cell(quote.CustomerName)} (account {quote.AccountNumber})  ");
+        Line(text, $"**From:** {Cell(q.BusinessName)}  ");
+        Line(text, $"**To:** {Cell(q.CustomerName)} (account {q.AccountNumber})  ");
         Line(text, $"**Issued:** {Day(q.IssuedOn)}  ");
         Line(text, $"**Valid until:** {Day(q.ValidUntil)} (end of day)");
         Line(text);
@@ -36,7 +36,7 @@ public static class QuoteDocument
         foreach (var line in quote.Lines)
         {
             var l = line.Line;
-            var quantity = Number(l.Quantity.Value) + (line.Unit is { } unit ? " " + unit.ToString().ToLowerInvariant() : string.Empty);
+            var quantity = Number(l.Quantity.Value) + (l.Unit is { } unit ? " " + unit.ToString().ToLowerInvariant() : string.Empty);
             Line(text, $"| {l.LineNumber} | {l.Sku} | {Cell(line.Name)} | {quantity} | {Amount(l.Price.UnitPrice)} | {Amount(l.Net)} | {VatLabel(l.Price.Vat.Code, l.Price.Vat.Rate)} {Amount(l.Vat)} | {Amount(l.Total)} |");
         }
 
@@ -54,11 +54,11 @@ public static class QuoteDocument
         Line(text);
         Line(text, $"- {OfferStatement}");
         Line(text, $"- Valid until the end of {Day(q.ValidUntil)}. After that it lapses and a new quote, at the prices of that day, is needed.");
-        Line(text, $"- Payment: {quote.PaymentTerms}.");
+        Line(text, $"- Payment: {q.PaymentTerms}.");
         Line(text, $"- Prices are in {q.Currency}, excluding VAT unless marked as a total. VAT is shown per line and per rate.");
         Line(text, $"- Quote {q.Number} is accepted only by confirming this exact quote; it becomes an order only then.");
         Line(text);
-        Line(text, $"Issued by the AI sales agent {q.AgentId} for {Cell(quote.BusinessName)}.");
+        Line(text, $"Issued by the AI sales agent {q.AgentId} for {Cell(q.BusinessName)}.");
         return text.ToString();
     }
 

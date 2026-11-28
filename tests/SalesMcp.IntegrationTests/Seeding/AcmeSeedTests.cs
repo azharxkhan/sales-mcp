@@ -18,6 +18,23 @@ public class AcmeSeedTests
     private static readonly SeedManifest _fixtures = AcmeSeed.Manifest;
 
     [Fact]
+    public void Every_quote_snapshots_what_its_document_states()
+    {
+        var customers = _data.Customers.ToDictionary(c => c.Id);
+        var products = _data.Offerings.OfType<Product>().ToDictionary(p => p.Id);
+
+        Assert.All(_data.Quotes, quote =>
+        {
+            var customer = customers[quote.CustomerId];
+            Assert.Equal(_data.Business.Name, quote.BusinessName);
+            Assert.Equal(customer.Name, quote.CustomerName);
+            Assert.Equal(customer.AccountNumber, quote.AccountNumber);
+            Assert.Equal(customer.PaymentTerms, quote.PaymentTerms);
+            Assert.All(quote.Lines, line => Assert.Equal(products[line.OfferingId].Unit, line.Unit));
+        });
+    }
+
+    [Fact]
     public void Has_120_products_in_8_categories_with_every_vat_code()
     {
         var products = _data.Offerings.OfType<Product>().ToList();

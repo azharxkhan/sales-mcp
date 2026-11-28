@@ -48,7 +48,7 @@ Demo data matters as much as the schema. An agent tested against five tidy rows 
 Some mappings worth reading:
 
 - **Offerings** use one table for all three kinds (table per hierarchy), with a `Kind` column saying which.
-- **Quote lines** store their price breakdown as JSON in a `PriceSnapshot` column, exactly as quoted ([ADR-0015](../adr/0015-commitments-only-through-tool-issued-documents.md)). JSON DTOs live in [`SnapshotJson.cs`](../../src/SalesMcp.Infrastructure/Persistence/Conversions/SnapshotJson.cs), so the domain needs no serializer attributes.
+- **Quote lines** store their price breakdown as JSON in a `PriceSnapshot` column, exactly as quoted ([ADR-0015](../adr/0015-commitments-only-through-tool-issued-documents.md)). JSON DTOs live in [`SnapshotJson.cs`](../../src/SalesMcp.Infrastructure/Persistence/Conversions/SnapshotJson.cs), so the domain needs no serializer attributes. The other values the document states (names, account number, payment terms, units) are ordinary columns on `Quotes` and `QuoteLines`, copied when the quote is issued.
 - **The database backs up the rules.** Unique indexes allow one order per quote and one default price list per business. If a bug in the code ever lets a second one through, the save fails.
 
 ### Step 2: SQLite and decimals

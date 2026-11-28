@@ -81,7 +81,7 @@ public sealed record QuoteResult(
             quote.Currency,
             [.. issued.Lines.Select(QuoteLineResult.From)],
             QuoteTotalsResult.From(quote.Totals),
-            PaymentTermsResult.From(issued.PaymentTerms),
+            PaymentTermsResult.From(quote.PaymentTerms),
             quote.AgentId.Value,
             quote.Lines.Min(l => l.Price.AsOf),
             issued.Document);
@@ -133,7 +133,7 @@ public sealed record QuoteLineResult(
             line.Sku.Value,
             issued.Name,
             b.Quantity.Value,
-            issued.Unit is { } unit ? Wire.Name(unit) : null,
+            line.Unit is { } unit ? Wire.Name(unit) : null,
             Wire.Name(b.Source),
             MoneyAmount.From(b.UnitPrice),
             MoneyAmount.From(b.Gross),

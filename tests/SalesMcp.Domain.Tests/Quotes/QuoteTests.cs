@@ -35,6 +35,8 @@ public abstract class QuoteFixture
 
     protected BusinessId Acme { get; } = BusinessId.New();
 
+    protected Business Seller => Business.Create(Acme, "Acme Distributors", "ZAR", "en-ZA").Value;
+
     protected PriceResolver Resolver { get; } = new(VatRateTable.SouthAfrica);
 
     protected Product Bearing { get; }
@@ -70,7 +72,7 @@ public abstract class QuoteFixture
         IReadOnlyList<PricedOffering> lines,
         IEnumerable<RiskReducer>? riskReducers = null,
         int validDays = QuoteErrors.DefaultValidDays) =>
-        Quote.Create(QuoteId.New(), Number, Customer, Agent, Today, lines, riskReducers ?? [], validDays);
+        Quote.Create(QuoteId.New(), Number, Seller, Customer, Agent, Today, lines, riskReducers ?? [], validDays);
 }
 
 public class QuoteTests : QuoteFixture
@@ -120,6 +122,28 @@ public class QuoteTests : QuoteFixture
         Assert.Equal("ACM-BRG-6204", quote.Lines[0].Sku.Value);
         Assert.Equal("ACM-BRG-6204 name", quote.Lines[0].Name);
         Assert.Equal(new Quantity(2), quote.Lines[0].Quantity);
+    }
+
+    [Fact]
+    public void Snapshots_what_the_document_states_about_seller_buyer_and_units()
+    {
+        var quote = NewQuote([Priced(Bearing, 1)]).Value;
+
+        Assert.Equal("Acme Distributors", quote.BusinessName);
+        Assert.Equal(Customer.Name, quote.CustomerName);
+        Assert.Equal(Customer.AccountNumber, quote.AccountNumber);
+        Assert.Equal(Customer.PaymentTerms, quote.PaymentTerms);
+        Assert.Equal(UnitOfMeasure.Each, quote.Lines[0].Unit);
+    }
+
+    [Fact]
+    public void Rejects_a_seller_that_is_not_the_customers_business()
+    {
+        var other = Business.Create(BusinessId.New(), "Nimbus IT", "ZAR", "en-ZA").Value;
+
+        var result = Quote.Create(QuoteId.New(), Number, other, Customer, Agent, Today, [Priced(Bearing, 1)], []);
+
+        Assert.Equal(QuoteErrors.SellerMismatch, result.Error);
     }
 
     [Fact]
@@ -246,11 +270,13 @@ public class QuoteTests : QuoteFixture
     public void Rejects_null_arguments()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            Quote.Create(QuoteId.New(), Number, null!, Agent, Today, [], []));
+            Quote.Create(QuoteId.New(), Number, Seller, null!, Agent, Today, [], []));
         Assert.Throws<ArgumentNullException>(() =>
-            Quote.Create(QuoteId.New(), Number, Customer, Agent, Today, null!, []));
+            Quote.Create(QuoteId.New(), Number, Seller, Customer, Agent, Today, null!, []));
         Assert.Throws<ArgumentNullException>(() =>
-            Quote.Create(QuoteId.New(), Number, Customer, Agent, Today, [], null!));
+            Quote.Create(QuoteId.New(), Number, Seller, Customer, Agent, Today, [], null!));
+        Assert.Throws<ArgumentNullException>(() =>
+            Quote.Create(QuoteId.New(), Number, null!, Customer, Agent, Today, [], []));
     }
 }
 

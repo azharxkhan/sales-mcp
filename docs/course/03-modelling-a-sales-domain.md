@@ -152,7 +152,7 @@ A **quote** is a numbered offer with priced lines, a validity date (30 days by d
 - an offering from another business
 - lines in different currencies
 
-Each line keeps a **snapshot** of its price breakdown. If the price list changes tomorrow, the quote doesn't. `QuoteTests.The_snapshot_is_unaffected_by_later_price_and_catalog_changes` proves it. A quote is a commitment, and only a tool-issued document can make one ([ADR-0015](../adr/0015-commitments-only-through-tool-issued-documents.md)).
+Each line keeps a **snapshot** of its price breakdown. If the price list changes tomorrow, the quote doesn't. `QuoteTests.The_snapshot_is_unaffected_by_later_price_and_catalog_changes` proves it. The quote also keeps everything else its document states (business and customer name, account number, payment terms and each line's unit), and showing it again never changes it (`CreateQuoteTests.The_document_is_unchanged_after_the_seller_customer_and_unit_change`). A quote is a commitment, and only a tool-issued document can make one ([ADR-0015](../adr/0015-commitments-only-through-tool-issued-documents.md)).
 
 A **sales order** exists only by converting an accepted quote. `SalesOrder.FromQuote` copies the quoted lines and prices, records the source quote and marks the quote accepted. An expired quote can't be converted. In M1 the order is a skeleton (`Draft → Released → Shipped → Invoiced`). **Holds**, **allocation** and **back-orders** arrive in M4.
 

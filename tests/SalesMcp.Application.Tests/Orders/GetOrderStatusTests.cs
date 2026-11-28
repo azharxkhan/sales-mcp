@@ -34,7 +34,7 @@ public class GetOrderStatusTests
             .Resolve(new PriceRequest(product, customer, new Quantity(4m), Percentage.Zero, _now), new PriceSources(list, null, []))
             .Value;
         var quote = Quote.Create(
-            QuoteId.New(), QuoteNumber.From(2026, 7).Value, customer, AgentId.Create("acme-distributor-jolt").Value,
+            QuoteId.New(), QuoteNumber.From(2026, 7).Value, Business.Create(_acme, "Acme Distributors", "ZAR", "en-ZA").Value, customer, AgentId.Create("acme-distributor-jolt").Value,
             _today, [new PricedOffering(product, price)], []).Value;
         var order = SalesOrder.FromQuote(OrderId.New(), OrderNumber.From(2026, 12).Value, quote, _today).Value;
         return (order, quote, product);

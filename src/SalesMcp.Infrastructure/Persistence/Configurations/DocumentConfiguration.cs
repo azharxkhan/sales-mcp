@@ -22,6 +22,16 @@ internal sealed class QuoteConfiguration : IEntityTypeConfiguration<Quote>
         builder.Property(q => q.Status);
         builder.Property(q => q.IssuedOn);
         builder.Property(q => q.ValidUntil);
+
+        // What the document states about the seller and buyer, as quoted (ADR-0015).
+        builder.Property(q => q.BusinessName).HasMaxLength(CatalogErrors.MaxNameLength).IsRequired();
+        builder.Property(q => q.CustomerName).HasMaxLength(CustomerErrors.MaxNameLength).IsRequired();
+        builder.Property(q => q.AccountNumber).IsRequired();
+        builder.ComplexProperty(q => q.PaymentTerms, terms =>
+        {
+            terms.Property(t => t.Basis).HasColumnName("PaymentTermsBasis");
+            terms.Property(t => t.Days).HasColumnName("PaymentTermsDays");
+        });
         builder.Property(q => q.RiskReducers)
             .HasConversion(new RiskReducersConverter(), RiskReducersConverter.Comparer)
             .HasMaxLength(200)
@@ -68,6 +78,7 @@ internal sealed class QuoteLineConfiguration : IEntityTypeConfiguration<QuoteLin
         builder.Property(l => l.LineNumber).ValueGeneratedNever();
         builder.Property(l => l.Sku).IsRequired();
         builder.Property(l => l.Name).HasMaxLength(CatalogErrors.MaxNameLength).IsRequired();
+        builder.Property(l => l.Unit);
 
         // The price as quoted, kept whole (ADR-0015). Never recalculated.
         builder.Property(l => l.Price).HasConversion<PriceBreakdownConverter>().HasColumnName("PriceSnapshot").IsRequired();
