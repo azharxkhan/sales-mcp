@@ -4,8 +4,9 @@ using System.Text.RegularExpressions;
 namespace SalesMcp.IntegrationTests.Docs;
 
 /// <summary>
-/// Keeps the course chapters and the domain glossary in step with the repository: links and anchors
-/// resolve, the glossary defines the terms issue #50 asks for, and every test a chapter names exists.
+/// Keeps the README, setup guides, course chapters and domain glossary in step with the repository:
+/// links and anchors resolve, the glossary defines the terms issue #50 asks for, and every test a
+/// chapter names exists.
 /// </summary>
 public sealed partial class CourseDocsTests
 {
@@ -13,8 +14,8 @@ public sealed partial class CourseDocsTests
 
     public static TheoryData<string> Documents()
     {
-        var data = new TheoryData<string>();
-        foreach (var folder in new[] { "docs/course", "docs/domain", "docs/mcp" })
+        var data = new TheoryData<string> { "README.md" };
+        foreach (var folder in new[] { "docs/course", "docs/domain", "docs/mcp", "docs/setup" })
         {
             foreach (var file in Directory.EnumerateFiles(Path.Combine(_root, folder), "*.md").Order(StringComparer.Ordinal))
             {
