@@ -34,6 +34,7 @@ internal sealed class OfferingConfiguration : IEntityTypeConfiguration<Offering>
         builder.Property(o => o.Sku).IsRequired();
         builder.Property(o => o.Name).HasMaxLength(CatalogErrors.MaxNameLength).IsRequired();
         builder.Property(o => o.Description).HasMaxLength(CatalogErrors.MaxDescriptionLength).IsRequired();
+        builder.Property(o => o.Category).HasMaxLength(CatalogErrors.MaxCategoryLength).IsRequired();
         builder.Property(o => o.VatCode);
         builder.Property(o => o.IsActive);
 

@@ -42,6 +42,7 @@ public abstract class Offering
         Name = name;
         Description = description;
         VatCode = vatCode;
+        Category = string.Empty;
         IsActive = true;
     }
 
@@ -64,6 +65,12 @@ public abstract class Offering
     /// </summary>
     public string Description { get; }
 
+    /// <summary>
+    /// The catalog group it is listed under, such as "Fasteners"; empty when it has none. Free text
+    /// from the catalog, so it is cleaned like the name when shown.
+    /// </summary>
+    public string Category { get; private set; }
+
     /// <summary>How VAT applies.</summary>
     public VatCode VatCode { get; }
 
@@ -72,6 +79,19 @@ public abstract class Offering
 
     /// <summary>Which of the three kinds this is.</summary>
     public abstract OfferingKind Kind { get; }
+
+    /// <summary>Lists the offering under <paramref name="category"/>; blank removes it from any group.</summary>
+    public Result Categorise(string? category)
+    {
+        var trimmed = category?.Trim() ?? string.Empty;
+        if (trimmed.Length > CatalogErrors.MaxCategoryLength)
+        {
+            return Result.Failure(CatalogErrors.CategoryTooLong);
+        }
+
+        Category = trimmed;
+        return Result.Success();
+    }
 
     /// <summary>Stops the offering being sold. Existing quotes keep their snapshot.</summary>
     public void Deactivate() => IsActive = false;
