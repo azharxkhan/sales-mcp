@@ -61,7 +61,7 @@ public sealed class ServerHostTests : IDisposable
         var info = host.Services.GetRequiredService<IOptions<McpServerOptions>>().Value.ServerInfo!;
 
         Assert.Equal("sales-mcp", info.Name);
-        Assert.StartsWith("0.1.0-dev", info.Version, StringComparison.Ordinal);
+        Assert.Equal("0.1.0", info.Version.Split('+')[0]);
     }
 
     [Fact]

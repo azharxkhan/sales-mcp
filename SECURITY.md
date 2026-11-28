@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Sales MCP hasn't had a release yet. Until v1.0.0, only the latest commit on `main` gets security fixes.
+Until v1.0.0, security fixes go to the latest commit on `main` and the latest release.
 
 | Version | Supported |
 |---|---|

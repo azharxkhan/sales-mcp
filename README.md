@@ -10,7 +10,7 @@ Configure an agent (**what** it sells: products, services or subscriptions; **ho
 
 The repo also works as a **step-by-step course** on building production-quality MCP servers, AI agents (including evaluating them in CI) and the DevOps around them.
 
-> **Status: M1 Domain & data done; M2 First MCP tools in progress.** The server runs over stdio with tools to search the catalog, read the customer and their credit, check stock, price, quote and follow an order, plus read-only resources, on realistic Acme Distributors demo data. The first release, **v0.1.0**, is not tagged yet. See the [roadmap](#roadmap).
+> **Status: [v0.1.0](https://github.com/azharxkhan/sales-mcp/releases/tag/v0.1.0), the first runnable release (M0 to M2 done); M3 next.** The server runs over stdio with tools to search the catalog, read the customer and their credit, check stock, price, quote and follow an order, plus read-only resources, on realistic Acme Distributors demo data. Agent profiles and playbooks arrive in M3. See the [roadmap](#roadmap).
 
 ## Quick start
 
@@ -88,7 +88,7 @@ The guardrails that matter are designed in, not prompted:
 |---|---|---|---|
 | [M0: Foundation](https://github.com/azharxkhan/sales-mcp/milestone/1) | — | Scaffold, quality gates, CI, security scanning, ADRs, community files | ✅ Done |
 | [M1: Domain & data](https://github.com/azharxkhan/sales-mcp/milestone/2) | — | Offerings, customers, price resolver with VAT, stock, quotes and orders, Acme Distributors seed data | ✅ Done |
-| [M2: First MCP tools](https://github.com/azharxkhan/sales-mcp/milestone/3) | v0.1.0 | Stdio host; catalog, customer, stock, price, quote and order-status tools; integration test harness | 🚧 In progress |
+| [M2: First MCP tools](https://github.com/azharxkhan/sales-mcp/milestone/3) | v0.1.0 | Stdio host; catalog, customer, stock, price, quote and order-status tools; integration test harness | ✅ Done |
 | [M3: Agents & playbooks](https://github.com/azharxkhan/sales-mcp/milestone/4) | v0.2.0 | YAML agents and playbooks with JSON Schema, `--agent` binding, `qualify`, `recommend`, SPIN and JOLT playbooks | ⏳ Planned |
 | [M4: Orders & guardrails](https://github.com/azharxkhan/sales-mcp/milestone/5) | v0.3.0 | Quote → order with buyer confirmation, credit holds, back-orders, discount tiers, human handoff, audit log, kill switch | ⏳ Planned |
 | [M5: Ship it](https://github.com/azharxkhan/sales-mcp/milestone/6) | **v1.0.0** | Docker, PostgreSQL, release automation, SBOM, image scanning, OpenTelemetry | ⏳ Planned |
