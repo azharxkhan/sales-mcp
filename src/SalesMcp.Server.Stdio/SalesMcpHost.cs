@@ -7,7 +7,10 @@ using ModelContextProtocol.Protocol;
 using SalesMcp.Application.Catalog;
 using SalesMcp.Application.Customers;
 using SalesMcp.Application.Inventory;
+using SalesMcp.Application.Pricing;
 using SalesMcp.Application.Session;
+using SalesMcp.Domain.Pricing;
+using SalesMcp.Domain.Tax;
 using SalesMcp.Infrastructure;
 using SalesMcp.Infrastructure.Persistence;
 
@@ -83,6 +86,9 @@ public static partial class SalesMcpHost
         builder.Services.AddScoped<OfferingLookup>();
         builder.Services.AddScoped<SearchCatalog>();
         builder.Services.AddScoped<CheckStock>();
+        builder.Services.AddSingleton(VatRateTable.SouthAfrica);
+        builder.Services.AddSingleton<PriceResolver>();
+        builder.Services.AddScoped<GetPrice>();
         builder.Services.AddScoped<GetCustomer>();
         builder.Services.AddScoped<GetCustomerCredit>();
 
