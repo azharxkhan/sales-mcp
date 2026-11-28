@@ -261,7 +261,7 @@ public sealed class PersistenceTests : IAsyncLifetime
         await _db.InScopeAsync(async sp =>
         {
             var tracked = (await Get<IQuoteRepository>(sp).GetAsync(quote.Id, Ct))!;
-            Get<IOrderRepository>(sp).Add(SalesOrder.FromQuote(orderId, tracked, _today).Value);
+            Get<IOrderRepository>(sp).Add(SalesOrder.FromQuote(orderId, OrderNumber.From(2026, 1).Value, tracked, _today).Value);
             await Get<IUnitOfWork>(sp).SaveChangesAsync(Ct);
         });
 

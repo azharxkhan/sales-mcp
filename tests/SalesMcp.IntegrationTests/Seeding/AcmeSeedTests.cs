@@ -173,6 +173,18 @@ public class AcmeSeedTests
     }
 
     [Fact]
+    public void Order_numbers_run_from_1_per_year_of_the_order_date_without_gaps()
+    {
+        foreach (var year in _data.Orders.GroupBy(o => o.OrderedOn.Year))
+        {
+            Assert.All(year, o => Assert.StartsWith($"SO-{year.Key}-", o.Number.Value, StringComparison.Ordinal));
+            Assert.Equal(
+                Enumerable.Range(1, year.Count()),
+                year.Select(o => int.Parse(o.Number.Value.AsSpan(8), System.Globalization.CultureInfo.InvariantCulture)).Order());
+        }
+    }
+
+    [Fact]
     public void Covers_about_12_months_with_open_quotes_and_orders_in_every_stage()
     {
         Assert.InRange(_data.Quotes.Count, 250, 600);

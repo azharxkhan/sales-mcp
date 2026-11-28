@@ -369,6 +369,7 @@ internal sealed class AcmeBuilder(DateOnly today)
         var orders = new List<SalesOrder>();
         var orderDates = customers.ToDictionary(c => c.Customer.Id, _ => new List<DateOnly>());
         var sequences = new Dictionary<int, int>();
+        var orderSequences = new Dictionary<int, int>();
         var outcomes = new Dictionary<CustomerSegment, WinTracker>
         {
             [CustomerSegment.New] = new(AcmeSeed.NewCustomerWinRate),
@@ -426,7 +427,9 @@ internal sealed class AcmeBuilder(DateOnly today)
             }
 
             var orderedOn = issuedOn.AddDays(opening ? 5 : _random.Next(1, AcmeSeed.OpenQuoteDays + 1));
-            var order = Ok(SalesOrder.FromQuote(new OrderId(SeedIds.For("acme/order/" + number.Value)), quote, orderedOn));
+            orderSequences[orderedOn.Year] = orderSequences.GetValueOrDefault(orderedOn.Year) + 1;
+            var orderNumber = Ok(OrderNumber.From(orderedOn.Year, orderSequences[orderedOn.Year]));
+            var order = Ok(SalesOrder.FromQuote(new OrderId(SeedIds.For("acme/order/" + number.Value)), orderNumber, quote, orderedOn));
             Advance(order, today.DayNumber - orderedOn.DayNumber);
             orders.Add(order);
             orderDates[customer.Id].Add(orderedOn);

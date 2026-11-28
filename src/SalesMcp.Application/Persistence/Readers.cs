@@ -2,9 +2,21 @@ using SalesMcp.Domain.Catalog;
 using SalesMcp.Domain.Common;
 using SalesMcp.Domain.Customers;
 using SalesMcp.Domain.Inventory;
+using SalesMcp.Domain.Orders;
 using SalesMcp.Domain.Pricing;
+using SalesMcp.Domain.Quotes;
 
 namespace SalesMcp.Application.Persistence;
+
+/// <summary>Reads orders for status questions. Entities come back untracked.</summary>
+public interface IOrderReader
+{
+    /// <summary>The customer's order with this number, or null if there is none or it belongs to another customer.</summary>
+    Task<SalesOrder?> FindByNumberAsync(CustomerId customerId, OrderNumber number, CancellationToken cancellationToken);
+
+    /// <summary>The number of the quote with this id, or null.</summary>
+    Task<QuoteNumber?> GetQuoteNumberAsync(QuoteId id, CancellationToken cancellationToken);
+}
 
 /// <summary>Reads businesses.</summary>
 public interface IBusinessReader

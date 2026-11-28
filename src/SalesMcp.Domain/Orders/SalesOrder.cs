@@ -77,9 +77,10 @@ public sealed class SalesOrder
     }
 #pragma warning restore CS8618
 
-    private SalesOrder(OrderId id, Quote quote, DateOnly orderedOn, List<OrderLine> lines)
+    private SalesOrder(OrderId id, OrderNumber number, Quote quote, DateOnly orderedOn, List<OrderLine> lines)
     {
         Id = id;
+        Number = number;
         CustomerId = quote.CustomerId;
         AgentId = quote.AgentId;
         SourceQuoteId = quote.Id;
@@ -91,6 +92,9 @@ public sealed class SalesOrder
 
     /// <summary>The order's id.</summary>
     public OrderId Id { get; }
+
+    /// <summary>The number printed on the order, which the buyer quotes when asking about it.</summary>
+    public OrderNumber Number { get; }
 
     /// <summary>The customer.</summary>
     public CustomerId CustomerId { get; }
@@ -121,9 +125,10 @@ public sealed class SalesOrder
     /// accepted, so it can't be converted twice.
     /// </summary>
     /// <param name="id">The order's id.</param>
+    /// <param name="number">Its printed number.</param>
     /// <param name="quote">The quote the buyer confirmed.</param>
     /// <param name="today">Today, from the caller's clock.</param>
-    public static Result<SalesOrder> FromQuote(OrderId id, Quote quote, DateOnly today)
+    public static Result<SalesOrder> FromQuote(OrderId id, OrderNumber number, Quote quote, DateOnly today)
     {
         ArgumentNullException.ThrowIfNull(quote);
 
@@ -138,7 +143,7 @@ public sealed class SalesOrder
             .ToList();
 
         quote.MarkAccepted();
-        return Result.Success(new SalesOrder(id, quote, today, lines));
+        return Result.Success(new SalesOrder(id, number, quote, today, lines));
     }
 
     /// <summary>Releases a draft order for fulfilment.</summary>

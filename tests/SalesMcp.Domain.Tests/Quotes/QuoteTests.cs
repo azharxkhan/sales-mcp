@@ -31,6 +31,8 @@ public abstract class QuoteFixture
         Number = QuoteNumber.From(2026, 123).Value;
     }
 
+    protected static OrderNumber OrderNo { get; } = OrderNumber.From(2026, 45).Value;
+
     protected BusinessId Acme { get; } = BusinessId.New();
 
     protected PriceResolver Resolver { get; } = new(VatRateTable.SouthAfrica);
@@ -88,7 +90,7 @@ public class QuoteTests : QuoteFixture
     public void Cannot_be_declined_once_accepted()
     {
         var quote = NewQuote([Priced(Bearing, 1)]).Value;
-        SalesOrder.FromQuote(OrderId.New(), quote, Today);
+        SalesOrder.FromQuote(OrderId.New(), OrderNo, quote, Today);
 
         Assert.Equal(QuoteErrors.NotOpen, quote.Decline().Error);
         Assert.Equal(QuoteStatus.Accepted, quote.Status);
@@ -259,7 +261,7 @@ public class SalesOrderTests : QuoteFixture
     {
         var quote = NewQuote([Priced(Bearing, 12, discount: 5m), Priced(Bread, 7)]).Value;
 
-        var order = SalesOrder.FromQuote(OrderId.New(), quote, Today.AddDays(3)).Value;
+        var order = SalesOrder.FromQuote(OrderId.New(), OrderNo, quote, Today.AddDays(3)).Value;
 
         Assert.Equal(quote.Id, order.SourceQuoteId);
         Assert.Equal(Customer.Id, order.CustomerId);
@@ -283,9 +285,9 @@ public class SalesOrderTests : QuoteFixture
     {
         var quote = NewQuote([Priced(Bearing, 1)]).Value;
 
-        Assert.True(SalesOrder.FromQuote(OrderId.New(), quote, Today).IsSuccess);
+        Assert.True(SalesOrder.FromQuote(OrderId.New(), OrderNo, quote, Today).IsSuccess);
         Assert.Equal(QuoteStatus.Accepted, quote.Status);
-        Assert.Equal(QuoteErrors.NotOpen, SalesOrder.FromQuote(OrderId.New(), quote, Today).Error);
+        Assert.Equal(QuoteErrors.NotOpen, SalesOrder.FromQuote(OrderId.New(), OrderNo, quote, Today).Error);
     }
 
     [Fact]
@@ -293,7 +295,7 @@ public class SalesOrderTests : QuoteFixture
     {
         var quote = NewQuote([Priced(Bearing, 1)]).Value;
 
-        Assert.True(SalesOrder.FromQuote(OrderId.New(), quote, quote.ValidUntil).IsSuccess);
+        Assert.True(SalesOrder.FromQuote(OrderId.New(), OrderNo, quote, quote.ValidUntil).IsSuccess);
     }
 
     [Fact]
@@ -301,18 +303,18 @@ public class SalesOrderTests : QuoteFixture
     {
         var quote = NewQuote([Priced(Bearing, 1)]).Value;
 
-        Assert.Equal(QuoteErrors.Expired, SalesOrder.FromQuote(OrderId.New(), quote, quote.ValidUntil.AddDays(1)).Error);
+        Assert.Equal(QuoteErrors.Expired, SalesOrder.FromQuote(OrderId.New(), OrderNo, quote, quote.ValidUntil.AddDays(1)).Error);
         Assert.Equal(QuoteStatus.Issued, quote.Status);
     }
 
     [Fact]
     public void Rejects_a_null_quote() =>
-        Assert.Throws<ArgumentNullException>(() => SalesOrder.FromQuote(OrderId.New(), null!, Today));
+        Assert.Throws<ArgumentNullException>(() => SalesOrder.FromQuote(OrderId.New(), OrderNo, null!, Today));
 
     [Fact]
     public void Moves_forward_from_draft_to_invoiced()
     {
-        var order = SalesOrder.FromQuote(OrderId.New(), NewQuote([Priced(Bearing, 1)]).Value, Today).Value;
+        var order = SalesOrder.FromQuote(OrderId.New(), OrderNo, NewQuote([Priced(Bearing, 1)]).Value, Today).Value;
 
         Assert.True(order.Release().IsSuccess);
         Assert.Equal(OrderStatus.Released, order.Status);
@@ -325,7 +327,7 @@ public class SalesOrderTests : QuoteFixture
     [Fact]
     public void Refuses_to_skip_or_repeat_a_step()
     {
-        var order = SalesOrder.FromQuote(OrderId.New(), NewQuote([Priced(Bearing, 1)]).Value, Today).Value;
+        var order = SalesOrder.FromQuote(OrderId.New(), OrderNo, NewQuote([Priced(Bearing, 1)]).Value, Today).Value;
 
         Assert.Equal(OrderErrors.StatusInvalidCode, order.Ship().Error.Code);
         Assert.Equal(OrderErrors.StatusInvalidCode, order.Invoice().Error.Code);

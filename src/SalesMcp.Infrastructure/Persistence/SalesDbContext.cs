@@ -78,6 +78,7 @@ public sealed class SalesDbContext(DbContextOptions<SalesDbContext> options) : D
         configurationBuilder.Properties<VatNumber>().HaveConversion<VatNumberConverter>().HaveMaxLength(10);
         configurationBuilder.Properties<AgentId>().HaveConversion<AgentIdConverter>().HaveMaxLength(64);
         configurationBuilder.Properties<QuoteNumber>().HaveConversion<QuoteNumberConverter>().HaveMaxLength(13);
+        configurationBuilder.Properties<OrderNumber>().HaveConversion<OrderNumberConverter>().HaveMaxLength(OrderNumber.Length);
 
         // Quantities allow 4 decimals (metres, litres, kilograms); percentages allow 2.
         if (Database.IsSqlite())

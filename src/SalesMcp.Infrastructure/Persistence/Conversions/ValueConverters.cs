@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SalesMcp.Domain.Catalog;
 using SalesMcp.Domain.Common;
 using SalesMcp.Domain.Customers;
+using SalesMcp.Domain.Orders;
 using SalesMcp.Domain.Quotes;
 
 namespace SalesMcp.Infrastructure.Persistence.Conversions;
@@ -36,6 +37,9 @@ internal sealed class AccountNumberConverter()
 internal sealed class VatNumberConverter() : ValueConverter<VatNumber, string>(v => v.Value, v => VatNumber.Create(v).Value);
 
 internal sealed class AgentIdConverter() : ValueConverter<AgentId, string>(v => v.Value, v => AgentId.Create(v).Value);
+
+internal sealed class OrderNumberConverter()
+    : ValueConverter<OrderNumber, string>(v => v.Value, v => OrderNumber.Parse(v).Value);
 
 internal sealed class QuoteNumberConverter()
     : ValueConverter<QuoteNumber, string>(v => v.Value, v => QuoteNumber.Parse(v).Value);

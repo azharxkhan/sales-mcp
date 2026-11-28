@@ -352,6 +352,11 @@ namespace SalesMcp.Infrastructure.Migrations.Sqlite
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(14)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateOnly>("OrderedOn")
                         .HasColumnType("TEXT");
 
@@ -366,6 +371,9 @@ namespace SalesMcp.Infrastructure.Migrations.Sqlite
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("Number")
+                        .IsUnique();
 
                     b.HasIndex("SourceQuoteId")
                         .IsUnique();
