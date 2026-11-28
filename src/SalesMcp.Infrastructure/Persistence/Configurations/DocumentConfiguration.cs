@@ -40,6 +40,8 @@ internal sealed class SalesOrderConfiguration : IEntityTypeConfiguration<SalesOr
     {
         builder.ToTable("SalesOrders");
         builder.HasKey(o => o.Id);
+        builder.Property(o => o.Number).IsRequired();
+        builder.HasIndex(o => o.Number).IsUnique();
         builder.Property(o => o.AgentId).IsRequired();
         builder.Property(o => o.Currency).HasMaxLength(3).IsRequired();
         builder.Property(o => o.Status);

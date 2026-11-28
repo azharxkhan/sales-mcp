@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<IPricingReader>(sp => sp.GetRequiredService<SalesReader>());
         services.AddScoped<IStockReader>(sp => sp.GetRequiredService<SalesReader>());
         services.AddScoped<IBusinessReader>(sp => sp.GetRequiredService<SalesReader>());
+        services.AddScoped<IOrderReader>(sp => sp.GetRequiredService<SalesReader>());
 
         services.AddScoped<SalesDocuments>();
         services.AddScoped<IQuoteRepository>(sp => sp.GetRequiredService<SalesDocuments>());

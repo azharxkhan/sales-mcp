@@ -7,6 +7,7 @@ using ModelContextProtocol.Protocol;
 using SalesMcp.Application.Catalog;
 using SalesMcp.Application.Customers;
 using SalesMcp.Application.Inventory;
+using SalesMcp.Application.Orders;
 using SalesMcp.Application.Pricing;
 using SalesMcp.Application.Quotes;
 using SalesMcp.Application.Session;
@@ -95,6 +96,7 @@ public static partial class SalesMcpHost
         builder.Services.AddScoped<GetCustomer>();
         builder.Services.AddScoped<GetCustomerCredit>();
         builder.Services.AddScoped<CreateQuote>();
+        builder.Services.AddScoped<GetOrderStatus>();
 
         var server = builder.Services
             .AddMcpServer(options => options.ServerInfo = new Implementation { Name = ServerName, Version = Version })

@@ -14,10 +14,24 @@ using SalesMcp.Domain.Requests;
 namespace SalesMcp.Infrastructure.Persistence;
 
 /// <summary>Read-only queries. Entities come back untracked, so reads can't be saved by accident.</summary>
-internal sealed class SalesReader(SalesDbContext db) : IBusinessReader, ICatalogReader, ICustomerReader, IPricingReader, IStockReader
+internal sealed class SalesReader(SalesDbContext db) : IBusinessReader, IOrderReader, ICatalogReader, ICustomerReader, IPricingReader, IStockReader
 {
     public Task<Business?> GetBusinessAsync(BusinessId id, CancellationToken cancellationToken) =>
         db.Businesses.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
+
+    // The customer is part of the query, so another customer's order is simply not found (D2).
+    public Task<SalesOrder?> FindByNumberAsync(CustomerId customerId, OrderNumber number, CancellationToken cancellationToken) =>
+        db.SalesOrders.AsNoTracking().FirstOrDefaultAsync(o => o.Number == number && o.CustomerId == customerId, cancellationToken);
+
+    public async Task<QuoteNumber?> GetQuoteNumberAsync(QuoteId id, CancellationToken cancellationToken)
+    {
+        var numbers = await db.Quotes.AsNoTracking()
+            .Where(q => q.Id == id)
+            .Select(q => q.Number)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return numbers.Count == 0 ? null : numbers[0];
+    }
 
     public Task<Offering?> GetOfferingAsync(OfferingId id, CancellationToken cancellationToken) =>
         db.Offerings.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
