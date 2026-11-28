@@ -10,11 +10,31 @@ Configure an agent (**what** it sells: products, services or subscriptions; **ho
 
 The repo also works as a **step-by-step course** on building production-quality MCP servers, AI agents (including evaluating them in CI) and the DevOps around them.
 
-> **Status: M1 Domain & data done; M2 next.** The sales domain (offerings, customers, pricing with VAT, stock, quotes and orders) is built and tested against SQLite, with realistic Acme Distributors demo data. There's no MCP server to run yet: the first runnable version is **v0.1.0** (M2). See the [roadmap](#roadmap).
+> **Status: M1 Domain & data done; M2 First MCP tools in progress.** The server runs over stdio with tools to search the catalog, read the customer and their credit, check stock, price, quote and follow an order, plus read-only resources, on realistic Acme Distributors demo data. The first release, **v0.1.0**, is not tagged yet. See the [roadmap](#roadmap).
 
 ## Quick start
 
-*Coming in [M2](https://github.com/azharxkhan/sales-mcp/milestone/3) (v0.1.0).* This section will show how to connect the server to Claude Desktop or Claude Code, pick an agent, and create your first quote. Until then, see [Build and test](#build-and-test).
+You need the [.NET 10 SDK](https://dotnet.microsoft.com/download). Publish the server, then add it to Claude Code as a demo customer (PowerShell):
+
+```powershell
+git clone https://github.com/azharxkhan/sales-mcp
+```
+
+```powershell
+dotnet publish sales-mcp/src/SalesMcp.Server.Stdio -c Release -o "$env:LOCALAPPDATA\Programs\sales-mcp"
+```
+
+```powershell
+claude mcp add --transport stdio sales-mcp -- dotnet "$env:LOCALAPPDATA\Programs\sales-mcp\SalesMcp.Server.Stdio.dll" --customer KES-001
+```
+
+Then ask: *"Find me a cordless drill, tell me the price for two, and quote me for two drills and two 4 Ah batteries."*
+
+- [Claude Desktop setup](docs/setup/claude-desktop.md): config file, customers, database, logs, MCP Inspector
+- [Claude Code setup](docs/setup/claude-code.md): also for macOS and Linux
+- [Demo](docs/setup/demo.md): what the server returns, step by step
+
+Agent profiles and playbooks arrive in M3; until then `--customer` picks who the conversation serves.
 
 ## Architecture
 
@@ -68,7 +88,7 @@ The guardrails that matter are designed in, not prompted:
 |---|---|---|---|
 | [M0: Foundation](https://github.com/azharxkhan/sales-mcp/milestone/1) | — | Scaffold, quality gates, CI, security scanning, ADRs, community files | ✅ Done |
 | [M1: Domain & data](https://github.com/azharxkhan/sales-mcp/milestone/2) | — | Offerings, customers, price resolver with VAT, stock, quotes and orders, Acme Distributors seed data | ✅ Done |
-| [M2: First MCP tools](https://github.com/azharxkhan/sales-mcp/milestone/3) | v0.1.0 | Stdio host; catalog, customer, stock, price, quote and order-status tools; integration test harness | ⏳ Planned |
+| [M2: First MCP tools](https://github.com/azharxkhan/sales-mcp/milestone/3) | v0.1.0 | Stdio host; catalog, customer, stock, price, quote and order-status tools; integration test harness | 🚧 In progress |
 | [M3: Agents & playbooks](https://github.com/azharxkhan/sales-mcp/milestone/4) | v0.2.0 | YAML agents and playbooks with JSON Schema, `--agent` binding, `qualify`, `recommend`, SPIN and JOLT playbooks | ⏳ Planned |
 | [M4: Orders & guardrails](https://github.com/azharxkhan/sales-mcp/milestone/5) | v0.3.0 | Quote → order with buyer confirmation, credit holds, back-orders, discount tiers, human handoff, audit log, kill switch | ⏳ Planned |
 | [M5: Ship it](https://github.com/azharxkhan/sales-mcp/milestone/6) | **v1.0.0** | Docker, PostgreSQL, release automation, SBOM, image scanning, OpenTelemetry | ⏳ Planned |
@@ -94,7 +114,7 @@ dotnet test --solution SalesMcp.slnx
 | `src/SalesMcp.Domain` | Entities and business rules. No dependencies |
 | `src/SalesMcp.Application` | Use cases, guardrail and playbook enforcement. Depends on Domain only |
 | `src/SalesMcp.Infrastructure` | EF Core and SQLite, Acme seed data; YAML agent/playbook loading (M3) |
-| `src/SalesMcp.Server.Stdio` | MCP host over stdio (M2) |
+| `src/SalesMcp.Server.Stdio` | MCP host over stdio: tools and resources |
 | `tests/*` | xUnit v3 on Microsoft.Testing.Platform. Layering is enforced by architecture tests |
 
 ## Docs
