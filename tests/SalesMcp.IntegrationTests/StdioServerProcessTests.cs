@@ -89,7 +89,7 @@ public sealed class StdioServerProcessTests : IDisposable
 
         var server = Assert.IsType<ModelContextProtocol.Protocol.Implementation>(client.ServerInfo);
         Assert.Equal("sales-mcp", server.Name);
-        Assert.StartsWith("0.1.0-dev", server.Version, StringComparison.Ordinal);
+        Assert.Equal("0.1.0", server.Version.Split('+')[0]);
 
         // The real transport lists the real tools.
         var tools = await client.ListToolsAsync(cancellationToken: Ct);

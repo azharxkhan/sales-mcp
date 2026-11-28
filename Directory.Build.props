@@ -13,8 +13,8 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <!-- The next release. The -dev suffix comes off when v0.1.0 is tagged (issue #77). -->
-    <Version>0.1.0-dev</Version>
+    <!-- The release this code is or leads up to. Tagged by hand until release-please arrives in M5 (ADR-0008). -->
+    <Version>0.1.0</Version>
 
     <!-- Package metadata, inherited by any future NuGet or dotnet tool package -->
     <Authors>Azhar Khan</Authors>
