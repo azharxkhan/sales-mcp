@@ -8,6 +8,9 @@ public static class CatalogErrors
     /// <summary>Longest allowed offering or business name.</summary>
     public const int MaxNameLength = 200;
 
+    /// <summary>Longest category name.</summary>
+    public const int MaxCategoryLength = 60;
+
     /// <summary>
     /// Longest allowed offering description. Descriptions are untrusted text that will be shown to a
     /// model, so they are capped here and sanitised on output (guardrail D4).
@@ -31,6 +34,10 @@ public static class CatalogErrors
     /// <summary>The description is too long.</summary>
     public static DomainError DescriptionTooLong { get; } =
         new("DescriptionTooLong", $"A description can be at most {MaxDescriptionLength} characters.");
+
+    /// <summary>The category name is too long.</summary>
+    public static DomainError CategoryTooLong { get; } =
+        new("CategoryTooLong", $"A category can be at most {MaxCategoryLength} characters.");
 
     /// <summary>A day count is negative.</summary>
     public static DomainError DaysNegative { get; } =

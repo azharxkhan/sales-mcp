@@ -128,6 +128,9 @@ internal sealed class SalesDocuments(SalesDbContext db) : IQuoteRepository, IOrd
     public Task<Quote?> GetAsync(QuoteId id, CancellationToken cancellationToken) =>
         db.Quotes.FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
 
+    public Task<Quote?> FindByNumberAsync(CustomerId customerId, QuoteNumber number, CancellationToken cancellationToken) =>
+        db.Quotes.FirstOrDefaultAsync(q => q.Number == number && q.CustomerId == customerId, cancellationToken);
+
     public void Add(Quote quote) => db.Quotes.Add(quote);
 
     public Task<SalesOrder?> GetAsync(OrderId id, CancellationToken cancellationToken) =>

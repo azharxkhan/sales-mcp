@@ -51,6 +51,11 @@ namespace SalesMcp.Infrastructure.Migrations.Sqlite
                     b.Property<Guid>("BusinessId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(2000)

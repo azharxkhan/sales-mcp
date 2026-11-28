@@ -252,16 +252,15 @@ public class CreateQuoteTests
             var catalog = new FakeCatalog(Offerings);
             var useCase = new CreateQuote(
                 new OfferingLookup(catalog),
-                new FakeBusinesses(),
                 new FakeCustomers(Customers),
-                catalog,
                 new FakePricing(new PriceSources(List, null, [])),
                 new PriceResolver(VatRateTable.SouthAfrica),
                 Documents,
                 Documents,
                 Documents,
                 Documents,
-                Time);
+                Time,
+                new QuotePresenter(new FakeBusinesses(), catalog));
             return useCase.ExecuteAsync(_acme, customer.Id, _agent, lines, requestId, Ct);
         }
     }
@@ -292,6 +291,9 @@ public class CreateQuoteTests
 
         public Task<Quote?> GetAsync(QuoteId id, CancellationToken cancellationToken) =>
             Task.FromResult(Quotes.FirstOrDefault(q => q.Id == id));
+
+        public Task<Quote?> FindByNumberAsync(CustomerId customerId, QuoteNumber number, CancellationToken cancellationToken) =>
+            Task.FromResult(Quotes.FirstOrDefault(q => q.Number == number && q.CustomerId == customerId));
 
         public void Add(Quote quote) => _pendingQuotes.Add(quote);
 

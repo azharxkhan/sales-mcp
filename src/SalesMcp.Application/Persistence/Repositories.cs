@@ -11,6 +11,9 @@ public interface IQuoteRepository
     /// <summary>The quote with this id, with its lines, or null.</summary>
     Task<Quote?> GetAsync(QuoteId id, CancellationToken cancellationToken);
 
+    /// <summary>The customer's quote with this number, with its lines, or null.</summary>
+    Task<Quote?> FindByNumberAsync(CustomerId customerId, QuoteNumber number, CancellationToken cancellationToken);
+
     /// <summary>Adds a new quote.</summary>
     void Add(Quote quote);
 }

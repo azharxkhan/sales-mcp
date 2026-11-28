@@ -86,6 +86,7 @@ internal sealed class AcmeBuilder(DateOnly today)
                         category.LeadTimeDays,
                         v.ReturnWindowDays ?? category.ReturnWindowDays));
 
+                    Ok(product.Categorise(category.Name));
                     _products.Add(product);
                     _listPrices.Add(product.Id, v.ListPrice);
                     _categories.Add(product.Id, category.Code);

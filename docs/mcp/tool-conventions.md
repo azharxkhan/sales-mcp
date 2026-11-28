@@ -57,6 +57,8 @@ The outline is simplified: the real tool is [PricingTools.cs](../../src/SalesMcp
 
 Resources follow the same scoping, fencing and stable-field rules as tools. They are read-only and small: a summary the host can attach to the conversation, not a data dump. A resource for another customer is not found.
 
+They live in [SalesResources.cs](../../src/SalesMcp.Server.Stdio/Resources/SalesResources.cs). A failure is a JSON-RPC `InvalidParams` error, the 2026-07-28 code for an unknown resource, with the message `{Code}: {Message}`. Templates take an id a host may not know, so `catalog://current` and `customer://current` are also listed as direct resources.
+
 ## Review checklist
 
 - [ ] Name, description and parameter descriptions follow the rules above

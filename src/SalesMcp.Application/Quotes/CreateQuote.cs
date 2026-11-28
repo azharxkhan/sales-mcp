@@ -3,7 +3,6 @@ using SalesMcp.Application.Catalog;
 using SalesMcp.Application.Customers;
 using SalesMcp.Application.Persistence;
 using SalesMcp.Application.Requests;
-using SalesMcp.Application.Text;
 using SalesMcp.Domain.Catalog;
 using SalesMcp.Domain.Common;
 using SalesMcp.Domain.Customers;
@@ -72,9 +71,7 @@ public static class CreateQuoteErrors
 /// snapshot that never changes, so it gets the same figures as the first call.
 /// </remarks>
 /// <param name="offerings">Resolves each line's offering.</param>
-/// <param name="businesses">Reads the seller's name.</param>
 /// <param name="customers">Reads the session's customer.</param>
-/// <param name="catalog">Reads offerings for their units.</param>
 /// <param name="pricing">Loads the customer's price lists and contracts.</param>
 /// <param name="resolver">Works out each line's price.</param>
 /// <param name="quotes">Stores the quote.</param>
@@ -82,24 +79,21 @@ public static class CreateQuoteErrors
 /// <param name="idempotency">Remembers request ids.</param>
 /// <param name="unitOfWork">Saves it all in one transaction.</param>
 /// <param name="time">The clock for the issue date and the pricing moment.</param>
+/// <param name="presenter">Prepares the stored quote for showing.</param>
 public sealed class CreateQuote(
     OfferingLookup offerings,
-    IBusinessReader businesses,
     ICustomerReader customers,
-    ICatalogReader catalog,
     IPricingReader pricing,
     PriceResolver resolver,
     IQuoteRepository quotes,
     IQuoteNumbers numbers,
     IIdempotencyStore idempotency,
     IUnitOfWork unitOfWork,
-    TimeProvider time)
+    TimeProvider time,
+    QuotePresenter presenter)
 {
     /// <summary>The tool name idempotency records are kept under.</summary>
     public const string ToolName = "create_quote";
-
-    /// <summary>Longest step detail returned.</summary>
-    public const int MaxDetailLength = 300;
 
     private static readonly JsonSerializerOptions _json = new(JsonSerializerDefaults.Web);
 
@@ -183,7 +177,7 @@ public sealed class CreateQuote(
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
-        return Result.Success(await PresentAsync(quote.Value, customer, cancellationToken).ConfigureAwait(false));
+        return Result.Success(await presenter.PresentAsync(quote.Value, customer, cancellationToken).ConfigureAwait(false));
     }
 
     private static Result<IReadOnlyList<(string Reference, Quantity Quantity)>> CheckLines(IReadOnlyList<QuoteLineRequest?>? lines)
@@ -264,34 +258,7 @@ public sealed class CreateQuote(
             ?? throw new InvalidOperationException($"Idempotency record {record.Key} points to a missing quote.");
         var customer = await customers.GetCustomerAsync(quote.CustomerId, cancellationToken).ConfigureAwait(false)
             ?? throw new InvalidOperationException($"Quote {quote.Number} has no customer.");
-        return await PresentAsync(quote, customer, cancellationToken).ConfigureAwait(false);
-    }
-
-    private async Task<IssuedQuote> PresentAsync(Quote quote, Customer customer, CancellationToken cancellationToken)
-    {
-        var business = await businesses.GetBusinessAsync(customer.BusinessId, cancellationToken).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("The session's business is missing.");
-
-        var lines = new List<IssuedQuoteLine>(quote.Lines.Count);
-        foreach (var line in quote.Lines)
-        {
-            var offering = await catalog.GetOfferingAsync(line.OfferingId, cancellationToken).ConfigureAwait(false);
-            lines.Add(new IssuedQuoteLine(
-                line,
-                UntrustedText.Clean(line.Name, CatalogErrors.MaxNameLength),
-                (offering as Product)?.Unit,
-                [.. line.Price.Steps.Select(s => s with { Detail = UntrustedText.Clean(s.Detail, MaxDetailLength) })]));
-        }
-
-        var issued = new IssuedQuote(
-            quote,
-            business.Name,
-            customer.Name,
-            customer.AccountNumber,
-            customer.PaymentTerms,
-            lines,
-            string.Empty);
-        return issued with { Document = QuoteDocument.Render(issued) };
+        return await presenter.PresentAsync(quote, customer, cancellationToken).ConfigureAwait(false);
     }
 
     private sealed record StoredResponse(Guid QuoteId);
